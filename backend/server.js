@@ -2,7 +2,6 @@ import express from "express"
 import mongoose from "mongoose"
 import dotenv from "dotenv"
 dotenv.config()
-import { sendVerificationEmail } from "./utils/sendEmail.js"
 import nodemailer from "nodemailer";
 const transporter = nodemailer.createTransport({
 
@@ -19,7 +18,6 @@ import path from "path"
 import { fileURLToPath } from "url"
 import bcrypt from "bcrypt"
 import validator from "validator"
-import jwt from "jsonwebtoken"
 
 import User from "./models/User.js"
 
@@ -61,18 +59,15 @@ mongoose.connect(process.env.MONGO_URI)
 
 // ---------------- ROUTES ----------------
 
-
 /////////////// ana sayfa
 app.get("/", (req,res)=>{
     res.redirect("/login")
 })
 
-
 ////////////// login sayfası
 app.get("/login",(req,res)=>{
     res.render("login",{error:null})
 })
-
 
 /////////////// register sayfası
 app.get("/register",(req,res)=>{
@@ -80,26 +75,27 @@ app.get("/register",(req,res)=>{
   
 })
 
-app.get("/verify/:id", async (req,res)=>{
+app.get("/verify/:id", async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.send("Invalid verification link");
+    }
 
-const user = await User.findById(req.params.id)
+    const user = await User.findById(req.params.id);
 
-if(!user){
- return res.send("User not found")
-}
+    if (!user) {
+      return res.send("User not found");
+    }
 
-user.verified = true
-await user.save()
+    user.verified = true;
+    await user.save();
 
-return res.redirect("/login")
-
-})
-
-
-
-app.listen(5000,()=>{
-  console.log("server çalışıyor")
-})
+    return res.redirect("/login");
+  } catch (err) {
+    console.log("VERIFY ERROR:", err);
+    return res.send("Verification failed");
+  }
+});
 
 ////////////////// register işlemi
 app.post("/register", async (req,res)=>{
@@ -164,12 +160,12 @@ success:"📧An email verification link has been sent. Please check your email."
 })
 
 }catch(err){
+console.log("REGISTER ERROR:", err)
 
 return res.render("register",{
 error:"An error occurred during registration.",
 success:null
 })
-
 }
 
 })
@@ -177,115 +173,137 @@ success:null
 
 /////////login işlemi
 app.post("/login", async (req,res)=>{
-const {username,password} = req.body
-const user = await User.findOne({username})
-if(!user){
-return res.render("login",{error:"User not found"})
-}
-const match = await bcrypt.compare(password,user.password)
-if(!match){
-return res.render("login",{error:"Incorrect password"})
-}
-if(!user.verified){
-return res.render("login",{error:"Email address not verified."})
-}
-res.redirect("/game")
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
 
-})
+    if (!user) {
+      return res.render("login", { error: "User not found" });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+
+    if (!match) {
+      return res.render("login", { error: "Incorrect password" });
+    }
+
+    if (!user.verified) {
+      return res.render("login", { error: "Email address not verified." });
+    }
+
+    return res.redirect(`/game?username=${encodeURIComponent(user.username)}`);
+  } catch (err) {
+    console.log("LOGIN ERROR:", err);
+    return res.render("login", { error: "Something went wrong." });
+  }
+});
 
 ////////////////////
 app.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
 
-const { email } = req.body
+    if (!email) {
+      return res.render("forgot", {
+        error: "Email address required.",
+        success: null
+      });
+    }
 
-// email boş mu
-if(!email){
-return res.render("forgot",{
-error:"Email address required.",
-success:null
-})
-}
+    const user = await User.findOne({ email });
 
-// kullanıcı var mı kontrol et
-const user = await User.findOne({email})
+    if (!user) {
+      return res.render("forgot", {
+        error: "The email address is not registered.",
+        success: null
+      });
+    }
 
-if(!user){
-return res.render("forgot",{
-error:"The email address is not registered.",
-success:null
-})
-}
+    const resetLink = `http://localhost:5000/reset-password/${user._id}`;
 
-// reset link oluştur
-const resetLink =
-`http://localhost:5000/reset-password/${user._id}`
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Password reset",
+      html: `
+        <h2>Password Reset</h2>
+        <p>To reset your password, click the link below.</p>
+        <a href="${resetLink}">Reset Password</a>
+      `
+    });
 
-await transporter.sendMail({
-from:process.env.EMAIL_USER,
-to:email,
-subject:"Password reset",
-html:`
-<h2>Password Reset</h2>
-<p>To reset your password, click the link below.</p>
-<a href="${resetLink}">Reset Password</a>
-`
-})
-
-return res.render("forgot",{
-error:null,
-success:"The password reset link has been sent to your email address."
-})
-
-})
+    return res.render("forgot", {
+      error: null,
+      success: "The password reset link has been sent to your email address."
+    });
+  } catch (err) {
+    console.log("FORGOT PASSWORD ERROR:", err);
+    return res.render("forgot", {
+      error: "Something went wrong while sending reset email.",
+      success: null
+    });
+  }
+});
 
 ///////////////////
-app.post("/reset-password/:id", async (req,res)=>{
+app.post("/reset-password/:id", async (req, res) => {
+  try {
+    const { password, confirmPassword } = req.body;
 
-const {password, confirmPassword} = req.body
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.render("reset", {
+        userId: null,
+        error: "Invalid reset link.",
+        success: null
+      });
+    }
 
-// şifreler aynı mı
-if(password !== confirmPassword){
-return res.render("reset",{
-userId:req.params.id,
-error:"Passwords don't match.",
-success:null
-})
-}
+    if (password !== confirmPassword) {
+      return res.render("reset", {
+        userId: req.params.id,
+        error: "Passwords don't match.",
+        success: null
+      });
+    }
 
-// güçlü şifre kontrolü
-const passwordRegex =
-/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.# _$!%*?&]).{8,}$/
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#_$!%*?&]).{8,}$/;
 
-if(!passwordRegex.test(password)){
-return res.render("reset",{
-userId:req.params.id,
-error:"The password must be at least 8 characters long and must include uppercase letters, lowercase letters, numbers, and special characters.",
-success:null
-})
-}
+    if (!passwordRegex.test(password)) {
+      return res.render("reset", {
+        userId: req.params.id,
+        error: "The password must be at least 8 characters long and must include uppercase letters, lowercase letters, numbers, and special characters.",
+        success: null
+      });
+    }
 
-// hash
-const hashedPassword = await bcrypt.hash(password,10)
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-await User.findByIdAndUpdate(req.params.id,{
-password:hashedPassword
-})
+    await User.findByIdAndUpdate(req.params.id, {
+      password: hashedPassword
+    });
 
-// başarılı mesajı
-return res.render("reset",{
-userId:null,
-error:null,
-success:"Your password has been successfully changed."
-})
+    return res.render("reset", {
+      userId: null,
+      error: null,
+      success: "Your password has been successfully changed."
+    });
+  } catch (err) {
+    console.log("RESET PASSWORD ERROR:", err);
+    return res.render("reset", {
+      userId: req.params.id,
+      error: "Something went wrong while resetting password.",
+      success: null
+    });
+  }
+});
 
-})
-
-//////////////////
+/////forgot password
 app.get("/forgot-password",(req,res)=>{
 res.render("forgot",{error:null,success:null})
 })
 
-//////////////////
+///////reset password
 app.get("/reset-password/:id",(req,res)=>{
 res.render("reset",{
 userId:req.params.id,
@@ -294,7 +312,7 @@ success:null
 })
 })
 
-// oyun sayfası
+//////////game
 app.get("/game",(req,res)=>{
     const username = req.query.username
     res.render("game",{username})
