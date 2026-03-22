@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>User Profile</title>
+  <style>
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:#111;
+      color:white;
+      font-family:Arial, Helvetica, sans-serif;
+      background-image:url("/images/image2.jpg");
+      background-size:cover;
+      background-position:center;
+    }
+
+    .box{
+      width:760px;
+      background:rgba(0,0,0,0.75);
+      padding:40px;
+      border-radius:12px;
+    }
+
+    .top{
+      display:flex;
+      align-items:center;
+      gap:20px;
+      margin-bottom:25px;
+    }
+
+    .avatar img{
+      width:110px;
+      height:110px;
+      object-fit:cover;
+      border-radius:50%;
+      border:3px solid white;
+    }
+
+    .info{
+      flex:1;
+    }
+
+    .info h1{
+      margin-bottom:8px;
+    }
+
+    .stat{
+      margin-top:8px;
+      padding:10px;
+      background:rgba(255,255,255,0.08);
+      border-radius:8px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:20px;
+      background:rgba(255,255,255,0.08);
+    }
+
+    th, td{
+      padding:12px;
+      text-align:center;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+
+    th{
+      background:rgba(255,255,255,0.12);
+    }
+
+    a{
+      display:inline-block;
+      margin-top:20px;
+      color:white;
+      text-decoration:none;
+      font-weight:bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="top">
+      <div class="avatar">
+        <img src="<%= profileUser.avatar %>" alt="avatar">
+      </div>
+
+      <div class="info">
+        <h1><%= profileUser.username %></h1>
+        <div class="stat"><strong>Total Score:</strong> <%= profileUser.totalScore %></div>
+        <div class="stat"><strong>Highest Score:</strong> <%= profileUser.highestScore %></div>
+        <div class="stat"><strong>Titan Kills:</strong> <%= profileUser.titanKills %></div>
+        <div class="stat"><strong>Items Collected:</strong> <%= profileUser.itemsCollected %></div>
+        <div class="stat"><strong>Selected Skin:</strong> <%= profileUser.selectedSkin %></div>
+      </div>
+    </div>
+
+    <h2>Top Scores</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Score</th>
+          <th>Titan Kills</th>
+          <th>Items</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if(scores.length === 0){ %>
+          <tr>
+            <td colspan="4">No scores yet.</td>
+          </tr>
+        <% } %>
+
+        <% scores.forEach((entry, index) => { %>
+          <tr>
+            <td><%= index + 1 %></td>
+            <td><%= entry.score %></td>
+            <td><%= entry.titanKills %></td>
+            <td><%= entry.itemsCollected %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <a href="/leaderboard">← Back to Leaderboard</a>
+  </div>
+</body>
+</html>

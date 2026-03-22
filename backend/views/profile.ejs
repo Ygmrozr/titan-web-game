@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile</title>
+  <style>
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:#111;
+      color:white;
+      font-family:Arial, Helvetica, sans-serif;
+      background-image:url("/images/image2.jpg");
+      background-size:cover;
+      background-position:center;
+    }
+
+    .box{
+      width:520px;
+      background:rgba(0,0,0,0.72);
+      padding:40px;
+      border-radius:12px;
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:20px;
+    }
+
+    .avatar{
+      text-align:center;
+      margin-bottom:20px;
+    }
+
+    .avatar img{
+      width:110px;
+      height:110px;
+      object-fit:cover;
+      border-radius:50%;
+      border:3px solid white;
+    }
+
+    .row{
+      margin-bottom:12px;
+      padding:10px;
+      background:rgba(255,255,255,0.08);
+      border-radius:8px;
+    }
+
+    form{
+      margin-top:15px;
+      text-align:center;
+    }
+
+    input[type="file"]{
+      color:white;
+      margin-bottom:10px;
+    }
+
+    button{
+      padding:10px 14px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+
+    a{
+      display:inline-block;
+      margin-top:18px;
+      color:white;
+      text-decoration:none;
+      font-weight:bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Profile</h1>
+
+    <div class="avatar">
+      <img src="<%= user.avatar %>" alt="avatar">
+    </div>
+
+    <form action="/profile/avatar" method="POST" enctype="multipart/form-data">
+      <input type="file" name="avatar" accept="image/*" required>
+      <br>
+      <button type="submit">Upload Avatar</button>
+    </form>
+
+    <div class="row"><strong>Username:</strong> <%= user.username %></div>
+    <div class="row"><strong>Email:</strong> <%= user.email %></div>
+    <div class="row"><strong>Total Score:</strong> <%= user.totalScore %></div>
+    <div class="row"><strong>Highest Score:</strong> <%= user.highestScore %></div>
+    <div class="row"><strong>Titan Kills:</strong> <%= user.titanKills %></div>
+    <div class="row"><strong>Items Collected:</strong> <%= user.itemsCollected %></div>
+    <div class="row"><strong>Coins:</strong> <%= user.coins %></div>
+    <div class="row"><strong>Last Login:</strong> <%= user.lastLoginAt ? user.lastLoginAt.toLocaleString() : "No data" %></div>
+
+    <a href="/menu">← Back to Menu</a>
+  </div>
+</body>
+</html>

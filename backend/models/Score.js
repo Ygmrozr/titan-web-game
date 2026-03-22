@@ -1,25 +1,31 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
-const scoreSchema = new mongoose.Schema(
-  {
-    username: {
-      type: String,
-      required: true,
-      trim: true,
-      maxlength: 24,
-      default: "guest",
-    },
-    score: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 10_000_000,
-    },
+const scoreSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
   },
-  { timestamps: true }
-)
 
-scoreSchema.index({ score: -1, createdAt: -1 })
+  username: {
+    type: String,
+    required: true
+  },
 
-export default mongoose.model("Score", scoreSchema)
+  score: {
+    type: Number,
+    required: true
+  },
 
+  titanKills: {
+    type: Number,
+    default: 0
+  },
+
+  itemsCollected: {
+    type: Number,
+    default: 0
+  }
+}, { timestamps: true });
+
+export default mongoose.model("Score", scoreSchema);

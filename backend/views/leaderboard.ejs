@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Leaderboard</title>
+  <style>
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:#111;
+      color:white;
+      font-family:Arial, Helvetica, sans-serif;
+      background-image:url("/images/image5.jpg");
+      background-size:cover;
+      background-position:center;
+    }
+
+    .box{
+      width:760px;
+      background:rgba(0,0,0,0.75);
+      padding:40px;
+      border-radius:12px;
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:25px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:rgba(255,255,255,0.08);
+      overflow:hidden;
+    }
+
+    th, td{
+      padding:14px;
+      text-align:center;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+
+    th{
+      background:rgba(255,255,255,0.12);
+    }
+
+    a{
+      display:inline-block;
+      margin-top:20px;
+      color:white;
+      text-decoration:none;
+      font-weight:bold;
+    }
+
+    td a{
+     color:white;
+     text-decoration:none;
+     font-weight:bold;
+    }
+
+    td a:hover{
+     text-decoration:underline;
+    color:#00d8ff;
+    }
+
+    
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Leaderboard</h1>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Username</th>
+          <th>Score</th>
+          <th>Titan Kills</th>
+          <th>Items</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if(topScores.length === 0){ %>
+          <tr>
+            <td colspan="5">No scores yet.</td>
+          </tr>
+        <% } %>
+
+        <% topScores.forEach((entry, index) => { %>
+          <tr>
+            <td>
+              <% if(index === 0){ %>🥇<% } %>
+              <% if(index === 1){ %>🥈<% } %>
+              <% if(index === 2){ %>🥉<% } %>
+              <%= index + 1 %>
+            </td>
+            <td>
+            <a href="/user/<%= entry.userId %>"><%= entry.username %></a>
+            </td>
+            <td><%= entry.score %></td>
+            <td><%= entry.titanKills %></td>
+            <td><%= entry.itemsCollected %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <a href="/menu">← Back to Menu</a>
+  </div>
+</body>
+</html>

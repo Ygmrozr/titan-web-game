@@ -71,7 +71,8 @@
   <div class="menu-bar">
   <div>Player: <%= username %></div>
   <div class="menu-links">
-    <a href="/game">Game</a>
+    <a href="/profile">Profile</a>
+    <a href="/menu">MENU</a>
     <a href="/leaderboard">Leaderboard</a>
     <a href="/logout">Logout</a>
   </div>
@@ -283,6 +284,9 @@
     let killScore = 0;
     let itemScore = 0;
     const bloodEffects = [];
+    let titanKillCount = 0;
+    let itemCollectedCount = 0;
+    let scoreSaved = false;
 
     function spawnBlood(x, y, count = 10) {
       for (let i = 0; i < count; i++) {
@@ -317,6 +321,7 @@
     }
 
     function setLose(message) {
+      saveScoreToDatabase();
       game.state = "lose";
       game.message = message;
       player.vx = 0;
@@ -326,6 +331,7 @@
     }
 
     function setWin(message) {
+      saveScoreToDatabase();
       game.state = "win";
       game.message = message;
       player.vx = 0;
@@ -335,6 +341,7 @@
     }
 
     function resetGame() {
+      scoreSaved = false;
       player.x = 80;
       player.y = ground.y - player.height;
       player.vx = 0;
@@ -504,6 +511,7 @@
           titan.alive = false;
           killScore += titan.maxHealth * 140;
           spawnBlood(bloodX, bloodY, 22);
+          titanKillCount++;
         }
 
         return true;
@@ -627,6 +635,31 @@
 
       updateBloodEffects();
     }
+
+    async function saveScoreToDatabase(){
+  if(scoreSaved) return;
+  scoreSaved = true;
+
+  try{
+    const res = await fetch("/save-score", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        score: getTotalScore(),
+        titanKills: titanKillCount,
+        itemsCollected: itemCollectedCount
+      })
+    });
+
+    const data = await res.json();
+    console.log("Score saved:", data);
+
+  }catch(err){
+    console.log("SAVE SCORE ERROR:", err);
+  }
+}
 
     function updatePlayer() {
       if (game.state !== "playing") return;
@@ -782,6 +815,7 @@
         if (rectsCollide(getPlayerRect(), itemRect)) {
           item.collected = true;
           itemScore += item.score;
+          itemCollectedCount++;
 
           if (item.kind === "boost") {
             player.boostMode = true;

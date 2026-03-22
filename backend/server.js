@@ -20,8 +20,13 @@ import bcrypt from "bcrypt"
 import session from "express-session"
 import validator from "validator"
 import User from "./models/User.js"
+import Score from "./models/Score.js"
+import multer from "multer";
+
 
 const app = express()
+
+
 
 console.log(process.env.EMAIL_USER)
 console.log(process.env.EMAIL_PASS)
@@ -73,6 +78,18 @@ mongoose.connect(process.env.MONGO_URI)
 })
 
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueName = Date.now() + "-" + file.originalname.replace(/\s+/g, "-");
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({ storage });
+
 // ---------------- ROUTES ----------------
 
 /////////////// ana sayfa
@@ -90,6 +107,118 @@ app.get("/register",(req,res)=>{
   res.render("register",{error:null,success:null})
   
 })
+
+////////// profile
+app.get("/profile", requireAuth, async (req,res)=>{
+  try{
+    const user = await User.findById(req.session.user.id);
+    return res.render("profile", { user });
+  }catch(err){
+    console.log("PROFILE ERROR:", err);
+    return res.redirect("/menu");
+  }
+});
+
+////////// how to play
+app.get("/how-to-play", requireAuth, (req,res)=>{
+  res.render("how-to-play");
+});
+
+////////// market
+app.get("/market", requireAuth, async (req,res)=>{
+  try{
+    const user = await User.findById(req.session.user.id);
+
+    const marketItems = [
+      { key: "default", name: "Default Skin", price: 0 },
+      { key: "survey-corps", name: "Survey Corps Skin", price: 200 },
+      { key: "black-cape", name: "Black Cape Skin", price: 300 },
+      { key: "elite-mode", name: "Elite Mode Skin", price: 500 }
+    ];
+
+    return res.render("market", { user, marketItems });
+  }catch(err){
+    console.log("MARKET ERROR:", err);
+    return res.redirect("/menu");
+  }
+});
+
+
+//////////avatar
+app.post("/profile/avatar", requireAuth, upload.single("avatar"), async (req,res)=>{
+  try{
+    const user = await User.findById(req.session.user.id);
+
+    if(req.file){
+      user.avatar = "/uploads/" + req.file.filename;
+      await user.save();
+    }
+
+    return res.redirect("/profile");
+  }catch(err){
+    console.log("AVATAR UPLOAD ERROR:", err);
+    return res.redirect("/profile");
+  }
+});
+
+////////// buy item / skin
+app.post("/market/buy/:itemKey", requireAuth, async (req,res)=>{
+  try{
+    const user = await User.findById(req.session.user.id);
+    const itemKey = req.params.itemKey;
+
+    const prices = {
+      "default": 0,
+      "survey-corps": 200,
+      "black-cape": 300,
+      "elite-mode": 500
+    };
+
+    const price = prices[itemKey];
+
+    if(price === undefined){
+      return res.redirect("/market");
+    }
+
+    if(user.ownedSkins.includes(itemKey)){
+      return res.redirect("/market");
+    }
+
+    if(user.coins < price){
+      return res.redirect("/market");
+    }
+
+    user.coins -= price;
+    user.ownedSkins.push(itemKey);
+
+    await user.save();
+
+    return res.redirect("/market");
+  }catch(err){
+    console.log("BUY ERROR:", err);
+    return res.redirect("/market");
+  }
+});
+
+////////// select skin
+app.post("/market/select/:itemKey", requireAuth, async (req,res)=>{
+  try{
+    const user = await User.findById(req.session.user.id);
+    const itemKey = req.params.itemKey;
+
+    if(!user.ownedSkins.includes(itemKey)){
+      return res.redirect("/market");
+    }
+
+    user.selectedSkin = itemKey;
+    await user.save();
+
+    return res.redirect("/market");
+  }catch(err){
+    console.log("SELECT SKIN ERROR:", err);
+    return res.redirect("/market");
+  }
+});
 
 app.get("/verify/:id", async (req, res) => {
   try {
@@ -112,6 +241,43 @@ app.get("/verify/:id", async (req, res) => {
     return res.send("Verification failed");
   }
 });
+
+////////// save score
+app.post("/save-score", requireAuth, async (req,res)=>{
+  try{
+    const { score, titanKills, itemsCollected } = req.body
+
+    const user = await User.findById(req.session.user.id)
+
+    if(!user){
+      return res.status(404).json({ success:false, message:"User not found" })
+    }
+
+    await Score.create({
+      userId: user._id,
+      username: user.username,
+      score,
+      titanKills,
+      itemsCollected
+    })
+
+    user.totalScore += Number(score) || 0
+    user.titanKills += Number(titanKills) || 0
+    user.itemsCollected += Number(itemsCollected) || 0
+    user.coins += Math.floor((Number(score) || 0) / 10)
+
+    if((Number(score) || 0) > user.highestScore){
+      user.highestScore = Number(score) || 0
+    }
+
+    await user.save()
+
+    return res.json({ success:true })
+  }catch(err){
+    console.log("SAVE SCORE ERROR:", err)
+    return res.status(500).json({ success:false, message:"Could not save score" })
+  }
+})
 
 ////////////////// register işlemi
 app.post("/register", async (req,res)=>{
@@ -206,20 +372,23 @@ app.post("/login", async (req,res)=>{
     if (!user.verified) {
       return res.render("login", { error: "Email address not verified.", success: null });
     }
+    user.lastLoginAt = new Date();
+    await user.save();
+
     req.session.user = {
      id: user._id,
      username: user.username,
      email: user.email
-}
+};
 
-    return res.redirect("/menu")
+return res.redirect("/menu");
   } catch (err) {
     console.log("LOGIN ERROR:", err);
     return res.render("login", { error: "Something went wrong." });
   }
 });
 
-////////////////////
+///////////forgot password
 app.post("/forgot-password", async (req, res) => {
   try {
     const { email } = req.body;
@@ -266,7 +435,7 @@ app.post("/forgot-password", async (req, res) => {
   }
 });
 
-///////////////////
+///////////reset password
 app.post("/reset-password/:id", async (req, res) => {
   try {
     const { password, confirmPassword } = req.body;
@@ -347,9 +516,43 @@ app.get("/menu", requireAuth, (req,res)=>{
   res.render("menu")
 })
 
-/////////leaderboard
-app.get("/leaderboard", requireAuth, (req,res)=>{
-  res.send("Leaderboard will be added next.")
+
+////////// leaderboard
+app.get("/leaderboard", requireAuth, async (req,res)=>{
+  try{
+    const topScores = await Score.find().sort({ score: -1 }).limit(10);
+    return res.render("leaderboard", { topScores });
+  }catch(err){
+    console.log("LEADERBOARD ERROR:", err);
+    return res.redirect("/menu");
+  }
+});
+
+////////// public user profile
+app.get("/user/:id", requireAuth, async (req,res)=>{
+  try{
+    if(!mongoose.isValidObjectId(req.params.id)){
+      return res.redirect("/leaderboard")
+    }
+
+    const user = await User.findById(req.params.id)
+
+    if(!user){
+      return res.redirect("/leaderboard")
+    }
+
+    const scores = await Score.find({ userId: user._id })
+      .sort({ score: -1 })
+      .limit(10)
+
+    return res.render("public-profile", {
+      profileUser: user,
+      scores
+    })
+  }catch(err){
+    console.log("PUBLIC PROFILE ERROR:", err)
+    return res.redirect("/leaderboard")
+  }
 })
 
 ///////reset password
