@@ -50,7 +50,7 @@ app.use(session({
 }))
 
 
-// sonra Locals
+// Locals
 app.use((req,res,next)=>{
   res.locals.error = null
   res.locals.success = null
@@ -520,14 +520,27 @@ app.get("/menu", requireAuth, (req,res)=>{
 ////////// leaderboard
 app.get("/leaderboard", requireAuth, async (req,res)=>{
   try{
-    const topScores = await Score.find().sort({ score: -1 }).limit(10);
-    return res.render("leaderboard", { topScores });
-  }catch(err){
-    console.log("LEADERBOARD ERROR:", err);
-    return res.redirect("/menu");
-  }
-});
+    const topScores = await Score.aggregate([
+      { $sort: { score: -1, createdAt: 1 } },
+      {
+        $group: {
+          _id: "$userId",
+          username: { $first: "$username" },
+          score: { $first: "$score" },
+          titanKills: { $first: "$titanKills" },
+          itemsCollected: { $first: "$itemsCollected" }
+        }
+      },
+      { $sort: { score: -1 } },
+      { $limit: 10 }
+    ])
 
+    return res.render("leaderboard", { topScores })
+  }catch(err){
+    console.log("LEADERBOARD ERROR:", err)
+    return res.redirect("/menu")
+  }
+})
 ////////// public user profile
 app.get("/user/:id", requireAuth, async (req,res)=>{
   try{
