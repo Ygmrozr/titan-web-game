@@ -1,82 +1,132 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>Main Menu</title>
+  <meta charset="UTF-8" />
+  <title>Attack on Titan Map Menu</title>
   <style>
-    body{
-      margin:0;
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      background:#111;
-      color:white;
-      font-family:Arial, Helvetica, sans-serif;
-      background-image:url("/images/image10.png");
-      background-size:cover;
-      background-position:center;
-    }
+  *{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+  }
 
-    .box{
-      width:450px;
-      background:rgba(0,0,0,0.65);
-      padding:40px;
-      border-radius:12px;
-      text-align:center;
-    }
+  body{
+    height:100vh;
+    overflow:hidden;
+  }
 
-    h1{
-      margin-bottom:12px;
-    }
+  .map-container{
+    position:relative;
+    width:100vw;
+    height:100vh;
 
-    p{
-      margin-bottom:25px;
-    }
+    background:url("/images/map-menu.png") no-repeat center center;
+    background-size:cover; /* 🔥 en önemli satır */
+  }
 
-    a{
-      display:block;
-      margin:14px 0;
-      color:white;
-      text-decoration:none;
-      font-size:18px;
-      font-weight:bold;
-      padding:12px;
-      border-radius:8px;
-      background:rgba(255,255,255,0.12);
-    }
+  .hotspot{
+    position:absolute;
+    border-radius:12px;
+    background:rgba(255,255,255,0.08);
+    transition:0.25s;
+    text-decoration:none;
+  }
 
-    a:hover{
-      background:rgba(255,255,255,0.2);
-    }
-  </style>
+  .hotspot:hover{
+    background:rgba(0,216,255,0.18);
+    outline:2px solid rgba(255,255,255,0.45);
+  }
+
+  .label{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%, -50%);
+    color:white;
+    font-weight:bold;
+    text-shadow:0 2px 6px rgba(0,0,0,0.8);
+    pointer-events:none;
+    font-size:18px;
+  }
+
+  .welcome{
+    position:absolute;
+    top:20px;
+    left:20px;
+    background:rgba(0,0,0,0.5);
+    color:white;
+    padding:12px 18px;
+    border-radius:10px;
+  }
+
+  .title-box{
+    position:absolute;
+    top:20px;
+    right:20px;
+    background:rgba(0,0,0,0.5);
+    color:white;
+    padding:12px 18px;
+    border-radius:10px;
+  }
+
+</style>
 </head>
 <body>
-  <div class="box">
-    <h1>Attack on Titan Game</h1>
-    <p>Welcome, <%= currentUser ? currentUser.username : "Player" %></p>
 
-    <a href="/game">Start Game</a>
-    <a href="/profile">My Profile</a>
-    <a href="/account">My Account</a>
-    <a href="/how-to-play">How to Play</a>
-    <a href="/market">Market</a>
-    <a href="/titles">Titles</a>
-    <a href="/leaderboard">Leaderboard</a>
-    <a href="/logout">Logout</a>
+  <div class="map-container">
+    <div class="welcome">Welcome, <%= user.username %></div>
+    <div class="title-box">
+      <div>Current Title</div>
+      <strong><%= user.title %></strong>
+    </div>
+
+    <% if(titleUnlocked){ %>
+      <div style="position:absolute; top:80px; left:20px; background:rgba(0,216,255,0.2); color:white; padding:12px 18px; border-radius:10px; font-weight:bold;">
+        🎉 <%= titleUnlocked %>
+      </div>
+    <% } %>
+
+    <!-- START GAME - Shiganshina -->
+    <a class="hotspot" href="/game" style="left:240px; top:550px; width:180px; height:90px;">
+      <span class="label">Start Game</span>
+    </a>
+
+    <!-- LEADERBOARD - merkez -->
+    <a class="hotspot" href="/leaderboard" style="left:390px; top:250px; width:190px; height:110px;">
+      <span class="label">Leaderboard</span>
+    </a>
+
+    <!-- PROFILE - Stohess -->
+    <a class="hotspot" href="/profile" style="left:900px; top:220px; width:170px; height:80px;">
+      <span class="label">My Profile</span>
+    </a>
+
+    <!-- ACCOUNT -->
+    <a class="hotspot" href="/account" style="left:760px; top:420px; width:170px; height:80px;">
+      <span class="label">My Account</span>
+    </a>
+
+    <!-- HOW TO PLAY - Trost -->
+    <a class="hotspot" href="/how-to-play" style="left:470px; top:410px; width:170px; height:80px;">
+      <span class="label">How to Play</span>
+    </a>
+
+    <!-- MARKET - Karanese -->
+    <a class="hotspot" href="/market" style="left:500px; top:300px; width:180px; height:90px;">
+      <span class="label">Market</span>
+    </a>
+
+    <!-- TITLES -->
+    <a class="hotspot" href="/titles" style="left:700px; top:170px; width:150px; height:75px;">
+      <span class="label">Titles</span>
+    </a>
+
+    <!-- LOGOUT -->
+    <a class="hotspot" href="/logout" style="left:1170px; top:650px; width:140px; height:70px;">
+      <span class="label">Logout</span>
+    </a>
   </div>
-
-  <div style="margin-bottom:18px; padding:12px; background:rgba(255,255,255,0.08); border-radius:8px;">
-  <strong>Current Title:</strong> <%= user.title %>
-</div>
-
-<% if(titleUnlocked){ %>
-  <div style="margin-bottom:18px; padding:12px; background:rgba(0,216,255,0.15); border-radius:8px; color:#8fefff; font-weight:bold;">
-    🎉 <%= titleUnlocked %>
-  </div>
-<% } %>
-  
-
 
 </body>
 </html>

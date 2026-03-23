@@ -53,6 +53,8 @@ const userSchema = new mongoose.Schema({
     default: 0
   },
 
+  
+
   ownedSkins: {
     type: [String],
     default: ["default"]
