@@ -1,64 +1,899 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>How to Play</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+
   <style>
-    body{
+    *{
       margin:0;
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      align-items:center;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body{
+      width:100vw;
+      height:100vh;
+      overflow:hidden;
+      font-family:"Libre Baskerville", serif;
       background:#111;
-      color:white;
-      font-family:Arial, Helvetica, sans-serif;
-      background-image:url("/images/image3.png");
-      background-size:cover;
-      background-position:center;
+      color:#4d3921;
     }
 
-    .box{
-      width:650px;
-      background:rgba(0,0,0,0.72);
-      padding:40px;
+    body.page-leaving .screen-fade{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    body.page-leaving .book-wrap{
+      opacity:0;
+      transform:translateY(8px) scale(0.985);
+    }
+
+    .page{
+      position:relative;
+      width:100%;
+      height:100%;
+      background:url("/images/image3.png") center/cover no-repeat;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      isolation:isolate;
+    }
+
+    .page::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at center,
+          rgba(0,0,0,0.01) 34%,
+          rgba(0,0,0,0.12) 72%,
+          rgba(0,0,0,0.24) 100%);
+      z-index:1;
+      pointer-events:none;
+    }
+
+    .page::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.05)),
+        linear-gradient(rgba(120,90,40,0.035), rgba(120,90,40,0.035));
+      z-index:1;
+      pointer-events:none;
+      animation:sceneBreath 8s ease-in-out infinite;
+    }
+
+    @keyframes sceneBreath{
+      0%,100%{opacity:0.08;}
+      50%{opacity:0.16;}
+    }
+
+    .screen-fade{
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at center, rgba(24,18,12,0.08), rgba(14,10,7,0.92));
+      opacity:0;
+      transition:opacity 0.35s ease;
+      pointer-events:none;
+      z-index:100;
+    }
+
+    .book-wrap{
+      position:relative;
+      z-index:5;
+      width:min(800px, 78vw);
+      height:min(470px, 66vh);
+      perspective:2200px;
+      transition:opacity 0.28s ease, transform 0.28s ease;
+    }
+
+    .book-shadow{
+      position:absolute;
+      inset:auto 7% 1.2% 7%;
+      height:24px;
+      border-radius:999px;
+      background:rgba(0,0,0,0.28);
+      filter:blur(16px);
+      z-index:0;
+    }
+
+    /* CLOSED COVER FIRST */
+    .cover-stage{
+      position:absolute;
+      inset:0;
+      z-index:30;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      opacity:1;
+      transition:opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    .cover-stage.hide{
+      opacity:0;
+      transform:scale(1.03);
+      pointer-events:none;
+    }
+
+    .closed-cover{
+      position:relative;
+      width:50%;
+      height:100%;
+      border-top-right-radius:18px;
+      border-bottom-right-radius:18px;
+      border-top-left-radius:6px;
+      border-bottom-left-radius:6px;
+      overflow:hidden;
+      background:
+        linear-gradient(180deg, rgba(96,66,34,0.98), rgba(58,37,17,0.98));
+      box-shadow:
+        0 18px 34px rgba(0,0,0,0.28),
+        inset 0 0 0 2px rgba(190,150,90,0.20),
+        inset 0 0 30px rgba(0,0,0,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      color:#f2e4c2;
+      transform-origin:left center;
+      animation:coverBreath 2.8s ease-in-out infinite;
+    }
+
+    .closed-cover::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:url("/images/parchment-texture.jpg") center/cover no-repeat;
+      mix-blend-mode:soft-light;
+      opacity:0.45;
+    }
+
+    .closed-cover::after{
+      content:"";
+      position:absolute;
+      inset:18px;
+      border:1px solid rgba(212,178,112,0.24);
       border-radius:12px;
+      box-shadow:inset 0 0 0 1px rgba(255,230,180,0.04);
     }
 
-    h1{
+    @keyframes coverBreath{
+      0%,100%{transform:scale(1);}
+      50%{transform:scale(1.01);}
+    }
+
+    .cover-emblem-wrap{
+      position:relative;
+      z-index:2;
+      width:96px;
+      height:96px;
       margin-bottom:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:50%;
+      background:radial-gradient(circle at center, rgba(255,255,255,0.06), rgba(0,0,0,0.08));
+      box-shadow:
+        0 8px 18px rgba(0,0,0,0.20),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+
+    .cover-emblem{
+      width:200px;
+      height:200px;
+      object-fit:contain;
+      display:block;
+      filter:drop-shadow(0 4px 6px rgba(0,0,0,0.28));
+    }
+
+    .cover-title{
+      position:relative;
+      z-index:2;
+      font-family:"Cinzel", serif;
+      font-size:25px;
+      font-weight:800;
+      letter-spacing:1px;
+      margin-bottom:12px;
+      text-shadow:0 2px 6px rgba(0,0,0,0.35);
       text-align:center;
     }
 
-    ul{
-      padding-left:20px;
-      line-height:1.9;
+    .cover-subtitle{
+      position:relative;
+      z-index:2;
+      font-size:15px;
+      letter-spacing:0.7px;
+      opacity:0.9;
+      text-align:center;
+      max-width:70%;
+      line-height:1.6;
     }
 
-    a{
-      display:inline-block;
-      margin-top:20px;
-      color:white;
+    /* OPEN BOOK REVEAL */
+    .book{
+      position:relative;
+      width:100%;
+      height:100%;
+      display:flex;
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:
+        0 24px 56px rgba(0,0,0,0.30),
+        0 8px 18px rgba(0,0,0,0.18);
+      background:linear-gradient(180deg, #e7d7b6 0%, #dbc8a1 100%);
+      opacity:0;
+      transform:scale(0.985);
+      transition:opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    .book.show{
+      opacity:1;
+      transform:scale(1);
+    }
+
+    .book::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.10), transparent 18%, transparent 82%, rgba(70,45,20,0.05)),
+        radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 55%);
+      pointer-events:none;
+      z-index:1;
+    }
+
+    .book::after{
+      content:"";
+      position:absolute;
+      top:0;
+      bottom:0;
+      left:50%;
+      transform:translateX(-50%);
+      width:28px;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(55,35,18,0.16),
+          rgba(255,255,255,0.08) 35%,
+          rgba(255,255,255,0.06) 50%,
+          rgba(55,35,18,0.14)
+        );
+      box-shadow:
+        inset 6px 0 8px rgba(255,255,255,0.06),
+        inset -6px 0 10px rgba(70,45,20,0.12);
+      pointer-events:none;
+      z-index:3;
+    }
+
+    .left-page,
+    .right-flip-area{
+      position:relative;
+      width:50%;
+      height:100%;
+    }
+
+    .left-page{
+      background:
+        radial-gradient(circle at 35% 35%, rgba(255,248,232,0.62), transparent 58%),
+        linear-gradient(180deg, rgba(241,228,200,0.97), rgba(224,206,171,0.97));
+      border-right:1px solid rgba(90,60,25,0.12);
+      box-shadow:
+        inset -16px 0 22px rgba(90,60,25,0.08),
+        inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+
+    .right-flip-area{
+      background:
+        radial-gradient(circle at 65% 35%, rgba(255,248,232,0.56), transparent 58%),
+        linear-gradient(180deg, rgba(237,223,194,0.97), rgba(221,202,167,0.97));
+    }
+
+    .left-page::before,
+    .right-sheet::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:url("/images/parchment-texture.jpg") center/cover no-repeat;
+      mix-blend-mode:multiply;
+      opacity:0.35;
+      pointer-events:none;
+    }
+
+    .left-page::after{
+      content:"";
+      position:absolute;
+      top:0;
+      right:-1px;
+      width:22px;
+      height:100%;
+      background:linear-gradient(
+        90deg,
+        rgba(60,38,18,0.12),
+        rgba(255,255,255,0.06),
+        transparent
+      );
+      pointer-events:none;
+      z-index:2;
+    }
+
+    .left-content,
+    .sheet-content{
+      position:relative;
+      z-index:4;
+      padding:28px 24px 24px;
+      height:100%;
+    }
+
+    .left-kicker,
+    .page-kicker{
+      font-family:"Cinzel", serif;
+      font-size:12px;
+      letter-spacing:1.2px;
+      text-transform:uppercase;
+      color:#876942;
+      margin-bottom:8px;
+    }
+
+    .left-title,
+    .sheet-title{
+      font-family:"Cinzel", serif;
+      color:#5a4125;
+      text-shadow:0 1px 0 rgba(255,255,255,0.35);
+      line-height:1.18;
+    }
+
+    .left-title{
+      font-size:23px;
+      margin-bottom:12px;
+    }
+
+    .sheet-title{
+      font-size:22px;
+      margin-bottom:12px;
+    }
+
+    .left-title::after,
+    .sheet-title::after{
+      content:"";
+      display:block;
+      width:54px;
+      height:1px;
+      background:rgba(120,90,50,0.35);
+      margin-top:8px;
+    }
+
+    .left-image,
+    .sheet-image{
+      width:100%;
+      height:118px;
+      border-radius:12px;
+      overflow:hidden;
+      margin-bottom:14px;
+      border:1px solid rgba(120,90,50,0.15);
+      box-shadow:
+        0 6px 12px rgba(0,0,0,0.10),
+        inset 0 1px 0 rgba(255,255,255,0.18);
+      background:rgba(255,255,255,0.10);
+    }
+
+    .left-image img,
+    .sheet-image img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .left-text,
+    .sheet-text{
+      color:#5b4528;
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .left-tip{
+      margin-top:14px;
+      padding:11px 12px;
+      border-radius:12px;
+      background:rgba(255,255,255,0.16);
+      border:1px solid rgba(120,90,50,0.12);
+      color:#6a5130;
+      font-size:12px;
+      line-height:1.7;
+    }
+
+    .right-sheet{
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at 65% 38%, rgba(255,248,232,0.58), transparent 58%),
+        linear-gradient(180deg, rgba(239,226,198,0.97), rgba(224,206,171,0.97));
+      transform-origin:left center;
+      transform-style:preserve-3d;
+      transition:transform 0.7s ease, box-shadow 0.7s ease, filter 0.7s ease;
+      box-shadow:
+        inset 14px 0 20px rgba(90,60,25,0.08),
+        inset 0 1px 0 rgba(255,255,255,0.18),
+        0 0 0 rgba(0,0,0,0);
+      backface-visibility:hidden;
+      z-index:2;
+    }
+
+    .right-sheet::after{
+      content:"";
+      position:absolute;
+      top:0;
+      right:0;
+      width:20px;
+      height:100%;
+      background:linear-gradient(
+        270deg,
+        rgba(55,35,18,0.10),
+        rgba(255,255,255,0.04),
+        transparent
+      );
+      pointer-events:none;
+    }
+
+    .right-sheet.turning-next{
+      transform:rotateY(-16deg);
+      box-shadow:
+        inset 18px 0 24px rgba(90,60,25,0.12),
+        -18px 8px 24px rgba(0,0,0,0.16);
+      filter:brightness(0.98);
+    }
+
+    .right-sheet.turning-prev{
+      transform:rotateY(16deg);
+      box-shadow:
+        inset 18px 0 24px rgba(90,60,25,0.12),
+        18px 8px 24px rgba(0,0,0,0.16);
+      filter:brightness(0.98);
+    }
+
+    .sheet-list{
+      padding-left:18px;
+      color:#5b4528;
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .sheet-list li{
+      margin-bottom:6px;
+    }
+
+    .tips-box{
+      margin-top:14px;
+      padding:11px 12px;
+      border-radius:12px;
+      background:rgba(255,255,255,0.18);
+      border:1px solid rgba(120,90,50,0.14);
+      color:#5d4728;
+      font-size:12px;
+      line-height:1.7;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.14);
+    }
+
+    .page-number{
+      position:absolute;
+      right:24px;
+      bottom:18px;
+      font-family:"Cinzel", serif;
+      font-size:12px;
+      color:#7e6642;
+    }
+
+    .bottom-nav{
+      position:absolute;
+      left:50%;
+      bottom:16px;
+      transform:translateX(-50%);
+      z-index:20;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+
+    .nav-btn,
+    .menu-btn{
       text-decoration:none;
-      font-weight:bold;
+      border:none;
+      cursor:pointer;
+      font-family:"Cinzel", serif;
+      font-size:14px;
+      font-weight:700;
+      color:#5a4125;
+      padding:12px 18px;
+      border-radius:10px;
+      background:
+        linear-gradient(
+          180deg,
+          rgba(255,250,240,0.52),
+          rgba(245,235,210,0.42)
+        );
+      border:1px solid rgba(120,90,50,0.22);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.35),
+        0 1px 2px rgba(0,0,0,0.05);
+      transition:all 0.18s ease;
+      letter-spacing:0.2px;
+    }
+
+    .nav-btn:hover,
+    .menu-btn:hover{
+      background:
+        linear-gradient(
+          180deg,
+          rgba(255,252,245,0.72),
+          rgba(245,235,210,0.62)
+        );
+      transform:translateY(-2px) scale(1.01);
+      box-shadow:
+        0 0 0 1px rgba(200,160,90,0.28),
+        0 6px 14px rgba(0,0,0,0.08),
+        0 0 12px rgba(255,230,150,0.25);
+    }
+
+    .nav-btn:active,
+    .menu-btn:active{
+      transform:scale(0.97);
+      box-shadow:inset 0 2px 4px rgba(0,0,0,0.18);
+    }
+
+    .nav-btn[disabled]{
+      opacity:0.35;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.25),
+        0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    @media (max-width: 900px){
+      .book-wrap{
+        width:min(92vw, 740px);
+        height:min(620px, 78vh);
+      }
+
+      .closed-cover{
+        width:100%;
+        height:50%;
+        margin-left:0;
+        border-radius:0 0 18px 18px;
+      }
+
+      .cover-stage{
+        align-items:flex-start;
+        padding-top:50%;
+      }
+
+      .book{
+        display:block;
+      }
+
+      .book::after{
+        display:none;
+      }
+
+      .left-page,
+      .right-flip-area{
+        width:100%;
+        height:50%;
+      }
+
+      .left-page{
+        border-right:none;
+        border-bottom:1px solid rgba(90,60,25,0.14);
+      }
+
+      .right-sheet{
+        transform-origin:center top;
+      }
+
+      .right-sheet.turning-next{
+        transform:rotateX(-8deg);
+      }
+
+      .right-sheet.turning-prev{
+        transform:rotateX(8deg);
+      }
+    }
+
+    @media (max-width: 640px){
+      .left-content,
+      .sheet-content{
+        padding:22px 16px 18px;
+      }
+
+      .left-title{
+        font-size:20px;
+      }
+
+      .sheet-title{
+        font-size:18px;
+      }
+
+      .left-text,
+      .sheet-text,
+      .sheet-list{
+        font-size:12px;
+      }
+
+      .left-image,
+      .sheet-image{
+        height:96px;
+      }
+
+      .cover-title{
+        font-size:26px;
+      }
+
+      .cover-subtitle{
+        font-size:13px;
+      }
+
+      .cover-emblem-wrap{
+        width:78px;
+        height:78px;
+      }
+
+      .cover-emblem{
+        width:58px;
+        height:58px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>How to Play</h1>
 
-    <ul>
-      <li>Move with A / D or Left / Right Arrow keys.</li>
-      <li>Jump with W or Up Arrow.</li>
-      <li>Click to use ODM-style grappling movement.</li>
-      <li>Collect items to gain score.</li>
-      <li>Defeat titans by hitting them from above or with special movement.</li>
-      <li>Reach the target area to complete the level.</li>
-      <li>Earn coins and use them in the market.</li>
-    </ul>
+<div class="page">
+  <div class="book-wrap" id="bookWrap">
+    <div class="book-shadow"></div>
 
-    <a href="/menu">← Back to Menu</a>
+    <div class="cover-stage" id="coverStage">
+      <div class="closed-cover">
+        <div class="cover-emblem-wrap">
+          <img src="/images/book-cover.png" alt="Emblem" class="cover-emblem">
+        </div>
+        <div class="cover-title">Scout Manual</div>
+        <div class="cover-subtitle">How to Play</div>
+      </div>
+    </div>
+
+    <div class="book" id="book">
+      <div class="left-page">
+        <div class="left-content">
+          <div class="left-kicker" id="leftKicker">Field Note</div>
+          <h1 class="left-title" id="leftTitle">Inside the Walls</h1>
+
+          <div class="left-image">
+            <img id="leftImage" src="/images/howto-book-1.png" alt="Guide Image">
+          </div>
+
+          <div class="left-text" id="leftText">
+            Before each mission, review the basics. A prepared scout survives longer and fights smarter.
+          </div>
+
+          <div class="left-tip" id="leftTip">
+            Discipline and timing are more valuable than rushing forward blindly.
+          </div>
+        </div>
+      </div>
+
+      <div class="right-flip-area">
+        <div class="right-sheet" id="rightSheet">
+          <div class="sheet-content">
+            <div class="page-kicker" id="pageKicker">Page 1</div>
+            <h2 class="sheet-title" id="sheetTitle">Movement & Controls</h2>
+
+            <div class="sheet-image">
+              <img id="sheetImage" src="/images/howto-book-2.png" alt="How To Play Image">
+            </div>
+
+            <div id="sheetBody"></div>
+            <div class="page-number" id="pageNumber">1 / 4</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <div class="bottom-nav">
+    <a href="/menu" class="menu-btn page-link">Back to Menu</a>
+    <button class="nav-btn" id="prevBtn">Previous</button>
+    <button class="nav-btn" id="nextBtn">Next</button>
+  </div>
+
+  <div class="screen-fade"></div>
+
+  <audio id="menuHoverSound" preload="auto">
+    <source src="/sounds/menu-hover.wav" type="audio/wav">
+  </audio>
+
+  <audio id="menuClickSound" preload="auto">
+    <source src="/sounds/menu-hover.wav" type="audio/wav">
+  </audio>
+</div>
+
+
+<script>
+  const pages = <%- JSON.stringify(pages) %>;
+
+  let currentPage = 0;
+  let audioUnlocked = false;
+  let leaving = false;
+
+  const book = document.getElementById("book");
+  const coverStage = document.getElementById("coverStage");
+  const pageKicker = document.getElementById("pageKicker");
+  const sheetTitle = document.getElementById("sheetTitle");
+  const sheetBody = document.getElementById("sheetBody");
+  const sheetImage = document.getElementById("sheetImage");
+  const pageNumber = document.getElementById("pageNumber");
+  const leftKicker = document.getElementById("leftKicker");
+  const leftTitle = document.getElementById("leftTitle");
+  const leftImage = document.getElementById("leftImage");
+  const leftText = document.getElementById("leftText");
+  const leftTip = document.getElementById("leftTip");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const hoverSound = document.getElementById("menuHoverSound");
+  const clickSound = document.getElementById("menuClickSound");
+  const interactiveEls = document.querySelectorAll(".menu-btn, .nav-btn");
+
+  function safePlay(audio, volume = 0.35) {
+    if (!audio) return;
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = volume;
+      const p = audio.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    } catch (_) {}
+  }
+
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    [hoverSound, clickSound].forEach(audio => {
+      if (!audio) return;
+      audio.volume = 0;
+      const p = audio.play();
+      if (p && typeof p.then === "function") {
+        p.then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.volume = 1;
+        }).catch(() => {});
+      }
+    });
+  }
+
+  function renderPage(index) {
+    const page = pages[index];
+
+    leftKicker.textContent = page.leftKicker;
+    leftTitle.textContent = page.leftTitle;
+    leftImage.src = page.leftImage;
+    leftText.textContent = page.leftText;
+    leftTip.textContent = page.leftTip;
+
+    pageKicker.textContent = page.kicker;
+    sheetTitle.textContent = page.title;
+    sheetImage.src = page.image;
+
+    if (page.bodyType === "list") {
+      sheetBody.innerHTML = `
+        <ul class="sheet-list">
+          ${page.bodyItems.map(item => `<li>${item}</li>`).join("")}
+        </ul>
+      `;
+    } else {
+      sheetBody.innerHTML = `
+        <div class="sheet-text">${page.bodyText}</div>
+        ${
+          page.tipText
+            ? `<div class="tips-box"><strong>${page.tipTitle || "Tip"}:</strong><br>${page.tipText}</div>`
+            : ""
+        }
+      `;
+    }
+
+    pageNumber.textContent = `${index + 1} / ${pages.length}`;
+
+    prevBtn.disabled = index === 0;
+    nextBtn.textContent = index === pages.length - 1 ? "Finish" : "Next";
+  }
+
+  function turnPage(direction) {
+    if (leaving) return;
+
+    if (audioUnlocked) {
+      safePlay(clickSound, 0.22);
+    }
+
+    rightSheet.classList.remove("turning-next", "turning-prev");
+    void rightSheet.offsetWidth;
+    rightSheet.classList.add(direction === "next" ? "turning-next" : "turning-prev");
+
+    setTimeout(() => {
+      renderPage(currentPage);
+    }, 180);
+
+    setTimeout(() => {
+      rightSheet.classList.remove("turning-next", "turning-prev");
+    }, 700);
+  }
+
+  function leaveToMenu() {
+    if (leaving) return;
+    leaving = true;
+    document.body.classList.add("page-leaving");
+    if (audioUnlocked) {
+      safePlay(clickSound, 0.28);
+    }
+    setTimeout(() => {
+      window.location.href = "/menu";
+    }, 280);
+  }
+
+  function openBookSequence() {
+    setTimeout(() => {
+      if (audioUnlocked) safePlay(clickSound, 0.20);
+      coverStage.classList.add("hide");
+      book.classList.add("show");
+    }, 900);
+  }
+
+  prevBtn.addEventListener("click", () => {
+    if (currentPage === 0) return;
+    currentPage--;
+    turnPage("prev");
+  });
+
+  nextBtn.addEventListener("click", () => {
+    if (currentPage === pages.length - 1) {
+      leaveToMenu();
+      return;
+    }
+    currentPage++;
+    turnPage("next");
+  });
+
+  interactiveEls.forEach(el => {
+    el.addEventListener("mouseenter", () => {
+      if (!audioUnlocked || leaving || el.disabled) return;
+      safePlay(hoverSound, 0.18);
+    });
+  });
+
+  document.querySelectorAll(".page-link").forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      leaveToMenu();
+    });
+  });
+
+  window.addEventListener("pointerdown", unlockAudio, { once: true });
+  window.addEventListener("keydown", unlockAudio, { once: true });
+
+  window.addEventListener("load", () => {
+    renderPage(currentPage);
+    openBookSequence();
+  });
+</script>
+
+
 </body>
 </html>

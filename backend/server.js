@@ -22,7 +22,7 @@ import validator from "validator"
 import User from "./models/User.js"
 import Score from "./models/Score.js"
 import multer from "multer";
-
+import HowToPage from "./models/HowToPage.js";
 
 const app = express()
 
@@ -266,8 +266,15 @@ app.get("/account", requireAuth, async (req,res)=>{
 });
 
 ////////// how to play
-app.get("/how-to-play", requireAuth, (req,res)=>{
-  res.render("how-to-play");
+app.get("/how-to-play", async (req, res) => {
+  try {
+    const pages = await HowToPage.find().sort({ pageNumber: 1 }).lean();
+
+    res.render("how-to-play", { pages });
+  } catch (error) {
+    console.error("How to Play pages fetch error:", error);
+    res.status(500).send("How to Play sayfası yüklenemedi.");
+  }
 });
 
 ////////// market
