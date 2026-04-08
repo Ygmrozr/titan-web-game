@@ -14,6 +14,34 @@
       box-sizing:border-box;
     }
 
+    .music-btn{
+      position:absolute;
+      top:18px;
+      right:18px;
+      z-index:45;
+      width:52px;
+      height:52px;
+      border-radius:50%;
+      border:1px solid rgba(225,190,120,0.18);
+      background:
+        linear-gradient(180deg, rgba(120,83,42,0.94), rgba(85,58,30,0.98));
+      color:#f6e8ca;
+      font-size:20px;
+      cursor:pointer;
+      box-shadow:
+        0 10px 20px rgba(0,0,0,0.24),
+        inset 0 1px 0 rgba(255,245,220,0.08);
+      transition:all 0.18s ease;
+    }
+
+    .music-btn:hover{
+      transform:translateY(-2px) scale(1.03);
+    }
+
+    .music-btn.is-off{
+      opacity:0.72;
+    }
+
     body{
       width:100vw;
       height:100vh;
@@ -114,7 +142,7 @@
       align-items:center;
       justify-content:center;
       opacity:1;
-      transition:opacity 0.55s ease, transform 0.55s ease;
+      transition:opacity 1.20s ease, transform 1.55s ease;
     }
 
     .cover-stage.hide{
@@ -133,7 +161,7 @@
       border-bottom-left-radius:6px;
       overflow:hidden;
       background:
-        linear-gradient(180deg, rgba(96,66,34,0.98), rgba(58,37,17,0.98));
+        linear-gradient(180deg, rgba(75, 53, 29, 0.98), rgba(32, 20, 9, 0.98));
       box-shadow:
         0 18px 34px rgba(0,0,0,0.28),
         inset 0 0 0 2px rgba(190,150,90,0.20),
@@ -161,7 +189,7 @@
       content:"";
       position:absolute;
       inset:18px;
-      border:1px solid rgba(212,178,112,0.24);
+      border:1px solid rgba(175, 148, 93, 0.24);
       border-radius:12px;
       box-shadow:inset 0 0 0 1px rgba(255,230,180,0.04);
     }
@@ -656,6 +684,10 @@
   </style>
 </head>
 <body>
+  <%- include("partials/music") %>
+
+<button class="music-btn" onclick="toggleMusic()">♫</button>
+
 
 <div class="page">
   <div class="book-wrap" id="bookWrap">
@@ -762,6 +794,18 @@
       if (p && typeof p.catch === "function") p.catch(() => {});
     } catch (_) {}
   }
+
+function toggleMusic(){
+  const music = document.getElementById("bgMusic");
+
+  if(music.paused){
+    music.play();
+    localStorage.setItem("bgMusicPlaying","true");
+  }else{
+    music.pause();
+    localStorage.setItem("bgMusicPlaying","false");
+  }
+}
 
   function unlockAudio() {
     if (audioUnlocked) return;

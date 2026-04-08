@@ -1,0 +1,45 @@
+<audio id="bgMusic" loop preload="auto">
+  <source src="/sounds/menu-music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  (function () {
+    const music = document.getElementById("bgMusic");
+    if (!music) return;
+
+    const MUSIC_TIME_KEY = "bgMusicTime";
+    const MUSIC_PLAYING_KEY = "bgMusicPlaying";
+
+    function restoreMusic() {
+      const savedTime = localStorage.getItem(MUSIC_TIME_KEY);
+      const isPlaying = localStorage.getItem(MUSIC_PLAYING_KEY);
+
+      if (savedTime) {
+        music.currentTime = parseFloat(savedTime) || 0;
+      }
+
+      if (isPlaying !== "false") {
+        music.volume = 0.3;
+        music.play().catch(() => {});
+      }
+    }
+
+    function unlockAndPlay() {
+      const isPlaying = localStorage.getItem(MUSIC_PLAYING_KEY);
+
+      if (isPlaying !== "false") {
+        music.volume = 0.3;
+        music.play().catch(() => {});
+        localStorage.setItem(MUSIC_PLAYING_KEY, "true");
+      }
+    }
+
+    window.addEventListener("load", restoreMusic);
+
+    window.addEventListener("beforeunload", () => {
+      localStorage.setItem(MUSIC_TIME_KEY, music.currentTime);
+    });
+
+    window.addEventListener("click", unlockAndPlay, { once: true });
+  })();
+</script>
