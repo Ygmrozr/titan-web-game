@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>How to Play</title>
+  
+  <%- include("partials/music") %>
 
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
 
@@ -142,7 +144,7 @@
       align-items:center;
       justify-content:center;
       opacity:1;
-      transition:opacity 1.20s ease, transform 1.55s ease;
+      transition:opacity 0.55s ease, transform 0.55s ease;
     }
 
     .cover-stage.hide{
@@ -161,7 +163,7 @@
       border-bottom-left-radius:6px;
       overflow:hidden;
       background:
-        linear-gradient(180deg, rgba(75, 53, 29, 0.98), rgba(32, 20, 9, 0.98));
+        linear-gradient(180deg, rgba(70, 49, 28, 0.98), rgba(41, 25, 12, 0.98));
       box-shadow:
         0 18px 34px rgba(0,0,0,0.28),
         inset 0 0 0 2px rgba(190,150,90,0.20),
@@ -216,8 +218,8 @@
     }
 
     .cover-emblem{
-      width:200px;
-      height:200px;
+      width:190px;
+      height:190px;
       object-fit:contain;
       display:block;
       filter:drop-shadow(0 4px 6px rgba(0,0,0,0.28));
@@ -684,10 +686,9 @@
   </style>
 </head>
 <body>
-  <%- include("partials/music") %>
 
-<button class="music-btn" onclick="toggleMusic()">♫</button>
-
+  
+  <button class="music-btn" onclick="toggleMusic()">♫</button>
 
 <div class="page">
   <div class="book-wrap" id="bookWrap">
@@ -795,7 +796,8 @@
     } catch (_) {}
   }
 
-function toggleMusic(){
+
+  function toggleMusic(){
   const music = document.getElementById("bgMusic");
 
   if(music.paused){

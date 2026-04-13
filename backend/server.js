@@ -23,6 +23,8 @@ import User from "./models/User.js"
 import Score from "./models/Score.js"
 import multer from "multer";
 import HowToPage from "./models/HowToPage.js";
+import gameLevels from "./data/gameLevels.js";
+
 
 const app = express()
 
@@ -318,6 +320,55 @@ app.get("/profile", requireAuth, async (req,res)=>{
     return res.redirect("/menu")
   }
 })
+
+
+app.get("/game/:level/:sector", async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.redirect("/login");
+    }
+
+    const level = Number(req.params.level);
+    const sector = Number(req.params.sector);
+    const devMode = req.query.dev === "1";
+
+    const user = await User.findById(req.session.user.id);
+
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    const levelData = gameLevels[level];
+    const sectorData = levelData?.sectors?.[sector];
+
+    if (!levelData || !sectorData) {
+      return res.status(404).send("Level or sector not found.");
+    }
+
+    const sectorKey = `${level}-${sector}`;
+    const isUnlocked =
+      user.unlockedLevels.includes(level) ||
+      user.completedSectors.includes(sectorKey);
+
+    const canBypass = devMode && user.isAdmin;
+
+    if (!isUnlocked && !canBypass) {
+      return res.status(403).send("This sector is locked.");
+    }
+
+    res.render("game", {
+      user,
+      level,
+      sector,
+      levelData,
+      sectorData,
+      devMode: canBypass
+    });
+  } catch (error) {
+    console.error("Game route error:", error);
+    res.status(500).send("Game could not be loaded.");
+  }
+});
 
 
 //////////avatar

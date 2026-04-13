@@ -78,6 +78,27 @@ const userSchema = new mongoose.Schema({
   default: ["eren"]
 },
 
+currentLevel: {
+  type: Number,
+  default: 1
+},
+currentSector: {
+  type: Number,
+  default: 1
+},
+unlockedLevels: {
+  type: [Number],
+  default: [1]
+},
+completedSectors: {
+  type: [String],
+  default: []
+},
+isAdmin: {
+  type: Boolean,
+  default: false
+},
+
 
   lastLoginAt: {
     type: Date,

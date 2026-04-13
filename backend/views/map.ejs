@@ -271,8 +271,27 @@
 
   <a class="back-btn" href="/menu">← Back to Menu</a>
 
+
+  <a class="hotspot open"
+   href="/game/1/1<%= user.isAdmin ? '?dev=1' : '' %>"
+   style="left:38%; top:58%;">
+   <a class="hotspot open"
+   href="/game/2/1<%= user.isAdmin ? '?dev=1' : '' %>"
+   style="left:38%; top:58%;">
+   <a class="hotspot open"
+   href="/game/3/1<%= user.isAdmin ? '?dev=1' : '' %>"
+   style="left:38%; top:58%;">
+   <a class="hotspot open"
+   href="/game/4/1<%= user.isAdmin ? '?dev=1' : '' %>"
+   style="left:38%; top:58%;">
+   <a class="hotspot open"
+   href="/game/5/1<%= user.isAdmin ? '?dev=1' : '' %>"
+   style="left:38%; top:58%;">
+
+
+
   <!-- LEVEL 1 -->
-  <a class="hotspot open" href="/game?stage=1" style="left:38%; top:58%;">
+  <a class="hotspot open" href="/game/1/1" style="left:38%; top:58%;">
     <span class="label">Level 1</span>
     <div class="tooltip">
       <strong><%= s1.name %></strong>
@@ -281,8 +300,8 @@
   </a>
 
   <!-- LEVEL 2 -->
-  <% if(unlockedStage >= 2){ %>
-    <a class="hotspot open" href="/game?stage=2" style="left:62%; top:39%;">
+  <%  if(user.unlockedLevels.includes(2)){ %>
+    <a class="hotspot open" href="/game/2/1" style="left:62%; top:39%;">
       <span class="label">Level 2</span>
       <div class="tooltip">
         <strong><%= s2.name %></strong>
@@ -302,8 +321,8 @@
   <% } %>
 
   <!-- LEVEL 3 -->
-  <% if(unlockedStage >= 3){ %>
-    <a class="hotspot open" href="/game?stage=3" style="left:53%; top:29%;">
+  <%  if(user.unlockedLevels.includes(3)){ %>
+    <a class="hotspot open" href="/game/3/1"" style="left:53%; top:29%;">
       <span class="label">Level 3</span>
       <div class="tooltip">
         <strong><%= s3.name %></strong>
@@ -323,8 +342,8 @@
   <% } %>
 
   <!-- LEVEL 4 -->
-  <% if(unlockedStage >= 4){ %>
-    <a class="hotspot open" href="/game?stage=4" style="left:31%; top:40%;">
+  <%  if(user.unlockedLevels.includes(4)){ %>
+    <a class="hotspot open" href="/game/4/1" style="left:31%; top:40%;">
       <span class="label">Level 4</span>
       <div class="tooltip">
         <strong><%= s4.name %></strong>
@@ -344,8 +363,8 @@
   <% } %>
 
   <!-- LEVEL 5 -->
-  <% if(unlockedStage >= 5){ %>
-    <a class="hotspot open" href="/game?stage=5" style="left:33%; top:80%;">
+  <%  if(user.unlockedLevels.includes(5)){ %>
+    <a class="hotspot open" href="/game/5/1" style="left:33%; top:80%;">
       <span class="label">Level 5</span>
       <div class="tooltip">
         <strong><%= s5.name %></strong>
