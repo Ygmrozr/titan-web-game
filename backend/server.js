@@ -370,6 +370,73 @@ app.get("/game/:level/:sector", async (req, res) => {
   }
 });
 
+app.post("/game/:level/:sector/complete", async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const level = Number(req.params.level);
+    const sector = Number(req.params.sector);
+
+    const user = await User.findById(req.session.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const levelData = gameLevels[level];
+    const sectorData = levelData?.sectors?.[sector];
+
+    if (!levelData || !sectorData) {
+      return res.status(404).json({ success: false, message: "Level or sector not found" });
+    }
+
+    const sectorKey = `${level}-${sector}`;
+
+    if (!user.completedSectors.includes(sectorKey)) {
+      user.completedSectors.push(sectorKey);
+      user.totalScore += sectorData.reward || 0;
+    }
+
+    let nextLevel = level;
+    let nextSector = sector;
+
+    if (sector < 10) {
+      nextSector = sector + 1;
+      user.currentLevel = level;
+      user.currentSector = nextSector;
+    } else if (level < 5) {
+      nextLevel = level + 1;
+      nextSector = 1;
+
+      if (!user.unlockedLevels.includes(nextLevel)) {
+        user.unlockedLevels.push(nextLevel);
+      }
+
+      user.currentLevel = nextLevel;
+      user.currentSector = nextSector;
+    } else {
+      user.currentLevel = 5;
+      user.currentSector = 10;
+    }
+
+    await user.save();
+
+    return res.json({
+      success: true,
+      nextLevel,
+      nextSector,
+      reward: sectorData.reward || 0,
+      totalScore: user.totalScore,
+      completedSectors: user.completedSectors,
+      unlockedLevels: user.unlockedLevels
+    });
+  } catch (error) {
+    console.error("Complete sector error:", error);
+    return res.status(500).json({ success: false, message: "Could not complete sector" });
+  }
+});
+
 
 //////////avatar
 app.post("/account/avatar", requireAuth, upload.single("avatar"), async (req,res)=>{
