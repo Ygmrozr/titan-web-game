@@ -4,52 +4,62 @@ const gameLevels = {
     background: "/images/levels/level1.png",
     sectors: {
       1: {
-        objective: "Defeat 3 giants",
+        objectiveType: "kill",
+        objectiveText: "Defeat 3 giants",
         enemyCount: 3,
         reward: 50
       },
       2: {
-        objective: "Collect 2 supplies",
+        objectiveType: "collect",
+        objectiveText: "Collect 2 supplies",
         enemyCount: 4,
         reward: 60
       },
       3: {
-        objective: "Reach the checkpoint",
+        objectiveType: "reach",
+        objectiveText: "Reach the checkpoint",
         enemyCount: 5,
         reward: 70
       },
       4: {
-        objective: "Defeat 5 giants",
+        objectiveType: "kill",
+        objectiveText: "Defeat 5 giants",
         enemyCount: 5,
         reward: 80
       },
       5: {
-        objective: "Collect 3 supplies",
+        objectiveType: "collect",
+        objectiveText: "Collect 3 supplies",
         enemyCount: 6,
         reward: 90
       },
       6: {
-        objective: "Protect the gate",
+        objectiveType: "protect",
+        objectiveText: "Protect the gate",
         enemyCount: 6,
         reward: 100
       },
       7: {
-        objective: "Defeat the wave",
+        objectiveType: "kill",
+        objectiveText: "Defeat the wave",
         enemyCount: 7,
         reward: 110
       },
       8: {
-        objective: "Reach the inner district",
+        objectionType: "reach",
+        objectiveText: "Reach the inner district",
         enemyCount: 7,
         reward: 120
       },
       9: {
-        objective: "Defeat elite giant",
+        objectionType: "kill",
+        objectiveText: "Defeat elite giant",
         enemyCount: 8,
         reward: 140
       },
       10: {
-        objective: "Clear the district",
+        objectiveType: "kill",
+        objectiveText: "Clear the district",
         enemyCount: 10,
         reward: 200
       }
