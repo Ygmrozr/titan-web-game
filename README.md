@@ -1,4 +1,4 @@
-# Giants Canvas Game
+# Beyond The Giants Canvas Game
 
 This project is a web-based game developed as a Computer Engineering graduation project.
 
