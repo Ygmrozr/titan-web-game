@@ -79,7 +79,17 @@
   <div class="objective-hud">
   <div>Level <%= level %> - Sector <%= sector %></div>
   <div><%= sectorData.objectiveText %></div>
+
   <div id="objectiveProgress">0 / <%= sectorData.itemTarget || sectorData.enemyCount %></div>
+=======
+  <div id="objectiveProgress">
+  <% if (sectorData.objectiveType === "reach") { %>
+    NOT REACHED
+  <% } else { %>
+    0 / <%= sectorData.itemTarget || sectorData.enemyCount %>
+  <% } %>
+</div>
+
 </div>
 
 
@@ -929,7 +939,18 @@ async function setLose(message) {
   };
 
   if (rectsCollide(getPlayerRect(), finishRect)) {
-    await setWin("Bölüm tamamlandı!");
+    if (objectiveType === "reach") {
+      const progressEl = document.getElementById("objectiveProgress");
+      const completeBtn = document.getElementById("completeSectorBtn");
+
+      if (progressEl) {
+        progressEl.textContent = "COMPLETED";
+      }
+
+      if (completeBtn) {
+        completeBtn.style.display = "block";
+      }
+    }
   }
 }
 
@@ -1124,13 +1145,15 @@ async function setLose(message) {
     }
 
     function drawFinish() {
-      ctx.fillStyle = "#3d8bff";
-      ctx.fillRect(finish.x - camera.x, finish.y, finish.width, finish.height);
+  if (objectiveType !== "reach") return;
 
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 14px Arial";
-      ctx.fillText("HEDEF", finish.x - camera.x - 5, finish.y - 10);
-    }
+  ctx.fillStyle = "#3d8bff";
+  ctx.fillRect(finish.x - camera.x, finish.y, finish.width, finish.height);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 14px Arial";
+  ctx.fillText("HEDEF", finish.x - camera.x - 5, finish.y - 10);
+}
 
     function drawGrappleLine() {
       if (!player.grappling || !player.grappleTarget) return;
@@ -1332,6 +1355,7 @@ async function setLose(message) {
       completeBtn.style.display = "block";
     }
   }
+<<<<<<< HEAD
   
   else if (objectiveType === "collect") {
     progressEl.textContent = `${collectedSupplyCount} / ${targetItemCount}`;
@@ -1340,6 +1364,20 @@ async function setLose(message) {
       progressEl.textContent = "COMPLETED";
       completeBtn.style.display = "block";
 }
+=======
+
+  else if (objectiveType === "collect") {
+    progressEl.textContent = `${collectedSupplyCount} / ${targetItemCount}`;
+
+    if (collectedSupplyCount >= targetItemCount) {
+      progressEl.textContent = "COMPLETED";
+      completeBtn.style.display = "block";
+    }
+  }
+
+  else if (objectiveType === "reach") {
+    progressEl.textContent = "NOT REACHED";
+>>>>>>> 35fd5de (#30 Fix CI Pipeline Working Directory)
   }
 }
 
