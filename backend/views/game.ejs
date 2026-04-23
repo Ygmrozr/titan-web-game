@@ -951,6 +951,7 @@ async function setLose(message) {
   }
 }
 }
+
     function updateCamera() {
       camera.x = player.x - canvas.width * 0.42;
       camera.x = clamp(camera.x, 0, WORLD.width - canvas.width);
@@ -1168,7 +1169,6 @@ async function setLose(message) {
   ctx.lineWidth = 3;
   ctx.stroke();
 }
-
 
     function drawGrappleLine() {
       if (!player.grappling || !player.grappleTarget) return;
@@ -1400,11 +1400,16 @@ async function setLose(message) {
         console.log("POST URL:", url);
 
         const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          }
-        });
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    score: getTotalScore(),
+    titanKills: titanKillCount,
+    itemsCollected: itemCollectedCount
+  })
+});
 
         console.log("Response status:", response.status);
 

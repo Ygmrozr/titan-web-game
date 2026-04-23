@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Level <%= level %> Sectors</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body{
+      min-height:100vh;
+      background:#111;
+      font-family:"Inter", sans-serif;
+      color:#f3ede2;
+      overflow:hidden;
+    }
+
+    .page{
+      position:relative;
+      width:100%;
+      min-height:100vh;
+      background:url("/images/map-menu.png") center/cover no-repeat;
+      isolation:isolate;
+      padding:20px 24px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+
+    .page::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at center,
+          rgba(0,0,0,0) 22%,
+          rgba(0,0,0,0.22) 68%,
+          rgba(0,0,0,0.44) 100%);
+      z-index:1;
+      pointer-events:none;
+    }
+
+    .aot-panel{
+      position:relative;
+      z-index:10;
+      overflow:hidden;
+      border-radius:18px;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(255,246,220,0.12), transparent 38%),
+        linear-gradient(180deg, rgba(70,50,26,0.86), rgba(43,31,18,0.90));
+      border:1px solid rgba(215,182,112,0.20);
+      box-shadow:
+        0 18px 34px rgba(0,0,0,0.28),
+        inset 0 1px 0 rgba(255,245,220,0.12),
+        inset 0 -1px 0 rgba(0,0,0,0.22);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+    }
+
+    .aot-panel::after{
+      content:"";
+      position:absolute;
+      inset:8px;
+      border:1px solid rgba(232,205,146,0.10);
+      border-radius:12px;
+      pointer-events:none;
+    }
+
+    .panel-content{
+      position:relative;
+      z-index:4;
+    }
+
+    .topbar{
+      position:relative;
+      z-index:10;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:14px;
+      width:fit-content;
+      margin:0 auto 18px auto;
+    }
+
+    .top-card{
+      width:760px;
+      padding:16px 18px;
+    }
+
+    .page-title{
+      font-family:"Cinzel", serif;
+      font-size:24px;
+      color:#f4e4bc;
+      margin-bottom:6px;
+    }
+
+    .page-subtitle{
+      font-size:12px;
+      color:rgba(247,238,220,0.76);
+      line-height:1.5;
+    }
+
+    .back-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      font-family:"Cinzel", serif;
+      font-size:14px;
+      font-weight:700;
+      padding:12px 16px;
+      border-radius:14px;
+      color:#f7e7c6;
+      background:
+        radial-gradient(circle at 18% 50%, rgba(0,255,180,0.08), transparent 42%),
+        linear-gradient(180deg, rgba(122,90,43,0.96), rgba(74,52,26,0.98));
+      border:1px solid rgba(215,180,110,0.25);
+      box-shadow:
+        0 10px 20px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,240,200,0.25),
+        inset 0 -2px 6px rgba(0,0,0,0.4);
+      transition:all 0.2s ease;
+      white-space:nowrap;
+    }
+
+    .back-btn:hover{
+      transform:translateY(-2px) scale(1.02);
+    }
+
+    .main-card{
+      position:relative;
+      z-index:10;
+      padding:18px 20px;
+      width:fit-content;
+      margin:0 auto;
+    }
+
+    .sector-grid{
+      display:grid;
+      grid-template-columns:repeat(5, 135px);
+      justify-content:center;
+      gap:12px;
+    }
+
+    .sector-card{
+      width:135px;
+      height:135px;
+      border-radius:14px;
+      padding:8px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      text-decoration:none;
+      color:#f7e7c6;
+      background:
+        radial-gradient(circle at 18% 50%, rgba(0,255,180,0.06), transparent 42%),
+        linear-gradient(180deg, rgba(122,90,43,0.88), rgba(74,52,26,0.94));
+      border:1px solid rgba(215,180,110,0.25);
+      box-shadow:
+        0 8px 16px rgba(0,0,0,0.28),
+        inset 0 1px 0 rgba(255,240,200,0.14);
+      transition:.18s ease;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .sector-card:hover{
+      transform:translateY(-2px) scale(1.02);
+      background:
+        radial-gradient(circle at 24% 50%, rgba(0,255,180,0.14), transparent 46%),
+        linear-gradient(180deg, rgba(156,116,54,0.92), rgba(90,63,31,0.96));
+    }
+
+    .sector-card.locked{
+      opacity:.42;
+      pointer-events:none;
+      filter:grayscale(.22);
+      background:rgba(16,12,9,0.76);
+    }
+
+    .sector-card.current{
+      box-shadow:
+        0 0 0 2px rgba(73,167,255,0.88),
+        0 0 18px rgba(73,167,255,0.32),
+        0 10px 18px rgba(0,0,0,0.30);
+    }
+
+    .sector-num{
+      font-family:"Cinzel", serif;
+      font-size:14px;
+      font-weight:800;
+      color:#f4e4bc;
+      margin-bottom:6px;
+      line-height:1.2;
+    }
+
+    .sector-text{
+      font-size:9px;
+      line-height:1.3;
+      color:rgba(247,238,220,0.9);
+    }
+
+    .sector-state{
+      margin-top:7px;
+      font-size:8px;
+      opacity:.76;
+      text-transform:uppercase;
+      letter-spacing:0.4px;
+    }
+
+    @media (max-width: 900px){
+      .topbar{
+        flex-direction:column;
+        align-items:center;
+      }
+
+      .top-card{
+        width:100%;
+        max-width:720px;
+      }
+
+      .sector-grid{
+        grid-template-columns:repeat(4, 120px);
+      }
+
+      .sector-card{
+        width:120px;
+        height:120px;
+      }
+    }
+
+    @media (max-width: 700px){
+      .page{
+        padding:14px;
+      }
+
+      .sector-grid{
+        grid-template-columns:repeat(3, 100px);
+      }
+
+      .sector-card{
+        width:100px;
+        height:100px;
+      }
+
+      .top-card{
+        width:100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<%- include("partials/music") %>
+
+<%
+  const currentLevel = Number(user.currentLevel || 1);
+  const currentSector = Number(user.currentSector || 1);
+%>
+
+<div class="page">
+
+  <div class="topbar">
+    <div class="aot-panel top-card">
+      <div class="panel-content">
+        <div class="page-title">Battle <%= level %></div>
+      </div>
+    </div>
+
+    <a class="back-btn" href="/map">← Back to Map</a>
+  </div>
+
+  <div class="aot-panel main-card">
+    <div class="panel-content">
+      <div class="sector-grid">
+        <% for (let i = 1; i <= 10; i++) {
+          const sectorData = levelData.sectors[i];
+
+          const isOpen =
+            user.isAdmin ||
+            Number(level) < currentLevel ||
+            (Number(level) === currentLevel && i <= currentSector) ||
+            (Number(level) === 1 && i === 1);
+
+          const isCurrent =
+            Number(level) === currentLevel && i === currentSector;
+        %>
+
+          <% if (isOpen) { %>
+            <a
+              class="sector-card <%= isCurrent ? 'current' : '' %>"
+              href="/game/<%= level %>/<%= i %><%= devMode ? '?dev=1' : '' %>"
+            >
+              <div class="sector-num">Sector <%= i %></div>
+              <div class="sector-text"><%= sectorData.objectiveText %></div>
+              <div class="sector-state"><%= isCurrent ? 'Current' : 'Open' %></div>
+            </a>
+          <% } else { %>
+            <div class="sector-card locked">
+              <div class="sector-num">🔒 <%= i %></div>
+              <div class="sector-text">Locked</div>
+              <div class="sector-state">Finish previous</div>
+            </div>
+          <% } %>
+
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

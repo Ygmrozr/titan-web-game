@@ -97,31 +97,31 @@ const stageData = [
     id: 1,
     name: "Trost",
     requiredLevel: 1,
-    story: "Eren'in yolculuğu burada başlıyor. İlk hedefin duvarların içindeki tehlikeyi öğrenmek ve hayatta kalmak."
+    story: "The walls are breached. Stand your ground, eliminate the threat, and help reclaim the city from the Titans."
   },
   {
     id: 2,
     name: "Karanese",
     requiredLevel: 2,
-    story: "Titan tehdidi büyüyor. Daha fazla titanla karşılaşacak ve hareket kabiliyetini daha iyi kullanman gerekecek."
+    story: "Karanese District — Advance from Karanese into the forest of giant trees. Navigate the terrain, avoid danger, and complete your mission."
   },
   {
     id: 3,
     name: "Stohess",
     requiredLevel: 3,
-    story: "Şehir içi çatışmalar yoğunlaşıyor. ODM kullanımın ve doğru zamanlama burada çok önemli."
+    story: "A hidden threat emerges within the walls. Uncover the truth and confront the enemy lurking among humanity."
   },
   {
     id: 4,
     name: "Castle Utgard",
     requiredLevel: 4,
-    story: "Düşmanlar daha güçlü. Daha dikkatli ilerlemeli ve kaynaklarını iyi kullanmalısın."
+    story: "Surrounded and outnumbered, you must fight through the night. Hold your position and survive against overwhelming odds."
   },
   {
     id: 5,
     name: "Shiganshina",
     requiredLevel: 10,
-    story: "Son mücadeleye geldin. Bu bölümde en iyi performansını göstermen gerekiyor."
+    story: "The decisive battle begins. Face the strongest Titans and fight to reclaim what humanity has lost."
   }
 ];
 
@@ -367,75 +367,6 @@ app.get("/game/:level/:sector", async (req, res) => {
   } catch (error) {
     console.error("Game route error:", error);
     res.status(500).send("Game could not be loaded.");
-  }
-});
-
-
-
-app.post("/game/:level/:sector/complete", async (req, res) => {
-  try {
-    if (!req.session.user) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
-    }
-
-    const level = Number(req.params.level);
-    const sector = Number(req.params.sector);
-
-    const user = await User.findById(req.session.user.id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    const levelData = gameLevels[level];
-    const sectorData = levelData?.sectors?.[sector];
-
-    if (!levelData || !sectorData) {
-      return res.status(404).json({ success: false, message: "Level or sector not found" });
-    }
-
-    const sectorKey = `${level}-${sector}`;
-
-    if (!user.completedSectors.includes(sectorKey)) {
-      user.completedSectors.push(sectorKey);
-      user.totalScore += sectorData.reward || 0;
-    }
-
-    let nextLevel = level;
-    let nextSector = sector;
-
-    if (sector < 10) {
-      nextSector = sector + 1;
-      user.currentLevel = level;
-      user.currentSector = nextSector;
-    } else if (level < 5) {
-      nextLevel = level + 1;
-      nextSector = 1;
-
-      if (!user.unlockedLevels.includes(nextLevel)) {
-        user.unlockedLevels.push(nextLevel);
-      }
-
-      user.currentLevel = nextLevel;
-      user.currentSector = nextSector;
-    } else {
-      user.currentLevel = 5;
-      user.currentSector = 10;
-    }
-
-    await user.save();
-
-    return res.json({
-      success: true,
-      nextLevel,
-      nextSector,
-      reward: sectorData.reward || 0,
-      totalScore: user.totalScore,
-      completedSectors: user.completedSectors,
-      unlockedLevels: user.unlockedLevels
-    });
-  } catch (error) {
-    console.error("Complete sector error:", error);
-    return res.status(500).json({ success: false, message: "Could not complete sector" });
   }
 });
 
@@ -908,12 +839,8 @@ app.get("/map", requireAuth, async (req,res)=>{
     const titleUnlocked = req.session.titleUnlocked || null;
     req.session.titleUnlocked = null;
     
-    let unlockedStage = 1;
-
-    if(level >= 2) unlockedStage = 2;
-    if(level >= 3) unlockedStage = 3;
-    if(level >= 4) unlockedStage = 4;
-    if(level >= 10) unlockedStage = 5;
+    const unlockedLevels = Array.isArray(user.unlockedLevels) ? user.unlockedLevels : [1];
+  const unlockedStage = Math.max(...unlockedLevels);
 
     return res.render("map", {
       user: user.toObject ? user.toObject() : user,
@@ -922,12 +849,139 @@ app.get("/map", requireAuth, async (req,res)=>{
       nextLevel,
       titleUnlocked,
       unlockedStage,
-      stageData
+      stageData,
+      gameLevels
     });
 
   }catch(err){
     console.log("MAP ERROR:", err);
     return res.redirect("/menu");
+  }
+});
+
+app.get("/map/:level", requireAuth, async (req, res) => {
+  const level = Number(req.params.level);
+  const levelData = gameLevels[level];
+
+  if (!levelData) {
+    return res.redirect("/map");
+  }
+
+  const user = await User.findById(req.session.user.id);
+
+  if (!user) {
+    return res.redirect("/login");
+  }
+
+  const unlockedLevels = user.unlockedLevels || [1];
+  const isAllowed = user.isAdmin || unlockedLevels.includes(level);
+
+  if (!isAllowed) {
+    return res.redirect("/map");
+  }
+
+  res.render("level-sectors", {
+    user: user.toObject ? user.toObject() : user,
+    level,
+    levelData,
+    gameLevels,
+    devMode: req.query.dev === "1" && user.isAdmin
+  });
+});
+
+
+app.post("/game/:level/:sector/complete", requireAuth, async (req, res) => {
+  try {
+    const level = Number(req.params.level);
+    const sector = Number(req.params.sector);
+    const userId = req.session.user.id;
+
+    const { score = 0, titanKills = 0, itemsCollected = 0 } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const sectorData = gameLevels[level]?.sectors?.[sector];
+    if (!sectorData) {
+      return res.status(400).json({ success: false, message: "Invalid sector" });
+    }
+
+    if (!Array.isArray(user.completedSectors)) user.completedSectors = [];
+    if (!Array.isArray(user.unlockedLevels)) user.unlockedLevels = [1];
+
+    const sectorKey = `${level}-${sector}`;
+    const alreadyCompleted = user.completedSectors.includes(sectorKey);
+
+    if (!alreadyCompleted) {
+      user.completedSectors.push(sectorKey);
+      user.coins = (user.coins || 0) + (sectorData.reward || 0);
+
+      user.totalScore = (user.totalScore || 0) + Number(score || 0);
+      user.titanKills = (user.titanKills || 0) + Number(titanKills || 0);
+      user.itemsCollected = (user.itemsCollected || 0) + Number(itemsCollected || 0);
+
+      if (!user.highestScore || Number(score || 0) > user.highestScore) {
+        user.highestScore = Number(score || 0);
+      }
+
+      await Score.create({
+        userId: user._id,
+        username: user.username,
+        score: Number(score || 0),
+        titanKills: Number(titanKills || 0),
+        itemsCollected: Number(itemsCollected || 0)
+      });
+    }
+
+    let nextLevel = level;
+    let nextSector = sector + 1;
+
+    if (sector >= 10) {
+      nextLevel = level + 1;
+      nextSector = 1;
+
+      if (gameLevels[nextLevel] && !user.unlockedLevels.includes(nextLevel)) {
+        user.unlockedLevels.push(nextLevel);
+      }
+    }
+
+    const currentLevel = Number(user.currentLevel || 1);
+    const currentSector = Number(user.currentSector || 1);
+
+    const isFurtherProgress =
+      nextLevel > currentLevel ||
+      (nextLevel === currentLevel && nextSector > currentSector);
+
+    if (isFurtherProgress) {
+      user.currentLevel = nextLevel;
+      user.currentSector = nextSector;
+    }
+
+    await user.save();
+
+    req.session.user.currentLevel = user.currentLevel;
+    req.session.user.currentSector = user.currentSector;
+    req.session.user.unlockedLevels = user.unlockedLevels;
+    req.session.user.completedSectors = user.completedSectors;
+    req.session.user.coins = user.coins;
+
+    return res.json({
+      success: true,
+      reward: sectorData.reward || 0,
+      nextLevel: user.currentLevel,
+      nextSector: user.currentSector,
+      totalScore: user.totalScore,
+      titanKills: user.titanKills,
+      itemsCollected: user.itemsCollected
+    });
+  } catch (err) {
+    console.error("COMPLETE SECTOR ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Sector completion failed"
+    });
   }
 });
 
