@@ -33,7 +33,7 @@
     }
 
     .help{
-      width:1000px;
+      width:1200px;
       font-size:14px;
       opacity:.95;
       line-height:1.5;
@@ -134,7 +134,7 @@
     Hareket: A / D veya ← / → | Zıplama: W / ↑ | Saldırı: Space | Halat: Mouse | Restart: R
   </div>
 
-  <canvas id="gameCanvas" width="1000" height="560"></canvas>
+  <canvas id="gameCanvas" width="1200" height="650"></canvas>
   
 
   <button id="completeSectorBtn" style="
@@ -179,11 +179,11 @@ levelBackground.src = "/images/levels/trost.png";
     };
 
     const ground = {
-      x: 0,
-      y: 490,
-      width: WORLD.width,
-      height: 70
-    };
+  x: 0,
+  y: 600,
+  width: WORLD.width,
+  height: 35
+};
 
     const player = {
       x: 80,
@@ -1018,7 +1018,7 @@ document.addEventListener("mouseup", () => {
       ctx.fillStyle = "rgba(255,255,220,0.08)";
       ctx.fillRect(ground.x - camera.x, ground.y, ground.width, ground.height);
 
-      ctx.fillStyle = "#567041";
+      ctx.fillStyle = "rgba(75, 95, 55, 0.55)";
       ctx.fillRect(ground.x - camera.x, ground.y, ground.width, 8);
     }
     
