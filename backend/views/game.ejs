@@ -1169,44 +1169,59 @@ document.addEventListener("mouseup", () => {
   }
 }
       
+
+const parallaxSettings = {
+  1: [
+    { img: bg1, speed: 0.10, x: 0, y: -50 },
+    { img: bg2, speed: 0.20, x: 0, y: -50 },
+    { img: bg3, speed: 0.30, x: 0, y: 183 },
+    { img: bg4, speed: 0.50, x: 0, y: 270 }
+  ],
+
+  2: [
+    { img: bg1, speed: 0.10, x: 0, y: -70 },
+    { img: bg2, speed: 0.20, x: 0, y: -35 },
+    { img: bg3, speed: 0.30, x: 0, y: 170 },
+    { img: bg4, speed: 0.50, x: 0, y: 260 }
+  ],
+
+  3: [
+  { img: bg1, speed: 0.10, x: 0, y: -100 },
+  { img: bg2, speed: 0.20, x: 0, y: 75 },
+  { img: bg3, speed: 0.30, x: 0, y: 100 },
+  { img: bg4, speed: 0.50, x: 0, y: 500 }
+],
+
+  4: [
+    { img: bg1, speed: 0.10, x: 0, y: -50 },
+    { img: bg2, speed: 0.20, x: 0, y: -50 },
+    { img: bg3, speed: 0.30, x: 0, y: 183 },
+    { img: bg4, speed: 0.50, x: 0, y: 270 }
+  ],
+
+  5: [
+    { img: bg1, speed: 0.10, x: 0, y: -50 },
+    { img: bg2, speed: 0.20, x: 0, y: -50 },
+    { img: bg3, speed: 0.30, x: 0, y: 183 },
+    { img: bg4, speed: 0.50, x: 0, y: 270 }
+  ]
+};
+
+
 function drawParallax() {
+  const settings = parallaxSettings[currentBattle] || parallaxSettings[1];
 
-  // Layer 1 - Sky
-  if (bg1.complete) {
-    ctx.drawImage(
-      bg1,
-      -camera.x * 0.1,
-      -50,
-    );
-  }
+  settings.forEach(layer => {
+    if (!layer.img.complete || layer.img.naturalWidth === 0) return;
 
-  // Layer 2 - Wall
-  if (bg2.complete) {
     ctx.drawImage(
-      bg2,
-      -camera.x * 0.20,
-      -50,
+      layer.img,
+      layer.x - camera.x * layer.speed,
+      layer.y
     );
-  }
-
-  // Layer 3 - Houses
-  if (bg3.complete) {
-    ctx.drawImage(
-      bg3,
-      -camera.x * 0.3,
-      183,
-    );
-  }
-
-  // Layer 4 - Foreground
-  if (bg4.complete) {
-    ctx.drawImage(
-      bg4,
-      -camera.x * 0.5,
-      270,
-    );
-  }
+  });
 }
+
 
 function drawGround() {
       ctx.fillStyle = "rgba(255,255,220,0.08)";
