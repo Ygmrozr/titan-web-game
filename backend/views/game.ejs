@@ -24,7 +24,7 @@
     }
 
     .topbar{
-      width:1000px;
+      width:1200px;
       display:flex;
       justify-content:space-between;
       align-items:center;
@@ -39,7 +39,7 @@
       line-height:1.5;
     }
     .menu-bar{
-  width:900px;
+  width:1200px;
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -224,9 +224,24 @@ levelBackground.src = "/images/levels/trost.png";
     
     const playerImg = new Image();
     playerImg.src = "/images/sprites/player.png";
-    
 
-let frameIndex = 0;
+    const titanSprites = {
+  idle: new Image(),
+  walk1: new Image(),
+  walk2: new Image(),
+  walk3: new Image(),
+  idle2: new Image(),
+  attack: new Image(),
+  dead: new Image()
+};
+
+titanSprites.idle.src = "/images/titans/01_idle_1.png";
+titanSprites.walk1.src = "/images/titans/02_walk_1.png";
+titanSprites.walk2.src = "/images/titans/03_walk_2.png";
+titanSprites.walk3.src = "/images/titans/04_walk_3.png";
+titanSprites.idle2.src = "/images/titans/04_walk_3.png";
+titanSprites.attack.src = "/images/titans/06_attack.png";
+titanSprites.dead.src = "/images/titans/07_dead.png";
 
 
     const keys = {};
@@ -268,15 +283,17 @@ let frameIndex = 0;
     }
 
     function createTitan(x, minX, maxX, dir = 1) {
-      const height = randInt(82, 130);
-      const width = Math.floor(height * 0.42);
-      const hp = Math.max(2, Math.floor(height / 34));
+      const height = randInt(165, 230);
+      const width = Math.floor(height * 0.38);
+      const hp = Math.max(3, Math.floor(height / 42));
 
       return {
         x,
         y: ground.y - height,
         width,
         height,
+        spriteWidth: Math.max(80, Math.floor(height * 0.70)),
+        spriteHeight: height + 22,
         alive: true,
         dir,
         faceDir: dir,
@@ -290,7 +307,12 @@ let frameIndex = 0;
         stunTimer: 0,
         attackFlashTimer: 0,
         damage: randInt(10, 18),
-        bloodTimer: 0
+        bloodTimer: 0,
+        frame: 0,
+        frameTimer: 0,
+        state: "walk",
+        deadTimer: 0,
+        drawDead: false
       };
     }
 
@@ -317,6 +339,8 @@ let frameIndex = 0;
 
       boss.height = 170;
       boss.width = 75;
+      boss.spriteWidth = 135;
+      boss.spriteHeight = 210;
       boss.y = ground.y - boss.height;
       boss.maxHealth = 12 + currentBattle * 3;
       boss.health = boss.maxHealth;
@@ -342,6 +366,9 @@ let frameIndex = 0;
         const dir = i % 2 === 0 ? 1 : -1;
 
         const titan = createTitan(x, minX, maxX, dir);
+        titan.frame = 0;
+        titan.frameTimer = 0;
+        titan.state = "walk";
 
         if (currentBattle === 2) {
           titan.moveSpeed *= 1.15;
@@ -630,6 +657,9 @@ async function setLose(message) {
 
         if (titan.health <= 0) {
           titan.alive = false;
+          titan.state = "dead";
+          titan.deadTimer = 90;
+          titan.drawDead = true;
           killScore += titan.maxHealth * 140;
           spawnBlood(bloodX, bloodY, 22);
           titanKillCount++;
@@ -908,11 +938,42 @@ document.addEventListener("mouseup", () => {
       }
     }
 
+    function updateTitanAnimation(titan) {
+  if (!titan.alive) {
+    titan.state = "dead";
+    return;
+  }
+
+  if (titan.attackFlashTimer > 0 || titan.attackCooldown > 28) {
+    titan.state = "attack";
+    return;
+  }
+
+  if (titan.hitCooldown > 0 || titan.stunTimer > 0) {
+    titan.state = "idle2";
+    return;
+  }
+
+  titan.state = "walk";
+  titan.frameTimer++;
+
+  if (titan.frameTimer >= 12) {
+    titan.frameTimer = 0;
+    titan.frame = (titan.frame + 1) % 3;
+  }
+}
     function updateTitans() {
       if (game.state !== "playing") return;
 
       titans.forEach(titan => {
-        if (!titan.alive) return;
+        if (!titan.alive) {
+  if (titan.deadTimer > 0) {
+    titan.deadTimer--;
+  }
+  return;
+}
+
+        updateTitanAnimation(titan);
 
         if (titan.stunTimer <= 0) {
           titan.x += titan.dir * titan.moveSpeed;
@@ -1068,12 +1129,12 @@ function drawParallax() {
     ctx.drawImage(
       bg4,
       -camera.x * 0.5,
-      300,
+      270,
     );
   }
 }
 
-    function drawGround() {
+function drawGround() {
       ctx.fillStyle = "rgba(255,255,220,0.08)";
       ctx.fillRect(ground.x - camera.x, ground.y, ground.width, ground.height);
 
@@ -1138,41 +1199,92 @@ function drawParallax() {
       });
     }
 
+    function getTitanImage(titan) {
+      if (!titan.alive || titan.state === "dead") {
+        return titanSprites.dead;
+      }
+
+      if (titan.state === "attack") {
+        return titanSprites.attack;
+      }
+
+      if (titan.state === "idle2") {
+        return titanSprites.idle2;
+      }
+
+      if (titan.state === "walk") {
+        const frames = [
+          titanSprites.walk1,
+          titanSprites.walk2,
+          titanSprites.walk3
+        ];
+
+        return frames[titan.frame % frames.length];
+      }
+
+      return titanSprites.idle;
+    }
+
+    function drawTitanSprite(img, drawX, drawY, drawWidth, drawHeight, faceDir) {
+      ctx.save();
+
+      if (faceDir === -1) {
+        ctx.scale(-1, 1);
+        ctx.drawImage(
+          img,
+          -drawX - drawWidth,
+          drawY,
+          drawWidth,
+          drawHeight
+        );
+      } else {
+        ctx.drawImage(
+          img,
+          drawX,
+          drawY,
+          drawWidth,
+          drawHeight
+        );
+      }
+
+      ctx.restore();
+    }
+
     function drawTitans() {
       titans.forEach(titan => {
-        if (!titan.alive) return;
+        const shouldDrawDead = !titan.alive && titan.deadTimer > 0;
+
+        if (!titan.alive && !shouldDrawDead) return;
 
         const x = titan.x - camera.x;
         const y = titan.y;
 
-        ctx.fillStyle = titan.isBoss ? (titan.hitCooldown > 0 ? "#b13b3b" : "#7f1d1d") : (titan.hitCooldown > 0 ? "#e9897f" : "#c96a5d");
-        ctx.fillRect(x, y, titan.width, titan.height);
+        const drawWidth = titan.spriteWidth || titan.width;
+        const drawHeight = titan.spriteHeight || titan.height;
+        const drawX = x + titan.width / 2 - drawWidth / 2;
+        const drawY = ground.y - drawHeight;
 
-        ctx.fillStyle = "rgba(120,0,0,0.25)";
-        ctx.fillRect(x + titan.width * 0.12, y + titan.height * 0.12, titan.width * 0.76, titan.height * 0.26);
+        const img = getTitanImage(titan);
 
-        ctx.fillStyle = "#8b2d2d";
-        ctx.fillRect(x + 6, y + 12, titan.width - 12, 10);
-
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(x + 8, y + 22, 7, 7);
-        ctx.fillRect(x + titan.width - 15, y + 22, 7, 7);
-
-        ctx.fillStyle = titan.attackFlashTimer > 0 ? "#ffb3a8" : "#b85b4e";
-        if (titan.faceDir === 1) {
-          ctx.fillRect(x + titan.width - 3, y + titan.height * 0.45, titan.width * 0.42, 10);
+        if (img && img.complete && img.naturalWidth > 0) {
+          drawTitanSprite(img, drawX, drawY, drawWidth, drawHeight, titan.faceDir);
         } else {
-          ctx.fillRect(x - titan.width * 0.42 + 3, y + titan.height * 0.45, titan.width * 0.42, 10);
+          ctx.fillStyle = titan.isBoss ? (titan.hitCooldown > 0 ? "#b13b3b" : "#7f1d1d") : (titan.hitCooldown > 0 ? "#e9897f" : "#c96a5d");
+          ctx.fillRect(x, y, titan.width, titan.height);
+
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(x + 8, y + 22, 7, 7);
+          ctx.fillRect(x + titan.width - 15, y + 22, 7, 7);
         }
 
-        if (titan.bloodTimer > 0) {
+        if (titan.alive && titan.bloodTimer > 0) {
           ctx.fillStyle = "rgba(180,0,0,0.75)";
           ctx.beginPath();
           ctx.arc(x + titan.width / 2, y + titan.height * 0.23, 7, 0, Math.PI * 2);
           ctx.fill();
         }
 
-        if (titan.stunTimer > 0) {
+        if (titan.alive && titan.stunTimer > 0) {
           ctx.fillStyle = "#ffd54f";
           ctx.beginPath();
           ctx.arc(x + titan.width / 2, y - 20, 4, 0, Math.PI * 2);
@@ -1185,19 +1297,22 @@ function drawParallax() {
           ctx.fill();
         }
 
-        const barWidth = titan.width;
-        const healthRatio = Math.max(0, titan.health / titan.maxHealth);
+        if (titan.alive) {
+          const barWidth = Math.max(42, titan.width);
+          const healthRatio = Math.max(0, titan.health / titan.maxHealth);
+          const barX = x + titan.width / 2 - barWidth / 2;
 
-        ctx.fillStyle = "rgba(0,0,0,0.45)";
-        ctx.fillRect(x, y - 12, barWidth, 6);
+          ctx.fillStyle = "rgba(0,0,0,0.45)";
+          ctx.fillRect(barX, y - 12, barWidth, 6);
 
-        ctx.fillStyle = "#2ecc71";
-        ctx.fillRect(x, y - 12, barWidth * healthRatio, 6);
+          ctx.fillStyle = "#2ecc71";
+          ctx.fillRect(barX, y - 12, barWidth * healthRatio, 6);
 
-        if (titan.isBoss) {
-          ctx.fillStyle = "#f1c40f";
-          ctx.font = "bold 12px Arial";
-          ctx.fillText("BOSS", x, y - 20);
+          if (titan.isBoss) {
+            ctx.fillStyle = "#f1c40f";
+            ctx.font = "bold 12px Arial";
+            ctx.fillText("BOSS", barX, y - 20);
+          }
         }
       });
     }
