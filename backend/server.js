@@ -360,6 +360,7 @@ const isUnlocked =
       return res.redirect("/map");
     }
 
+    
     res.render("game", {
       user,
       level,
