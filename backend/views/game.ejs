@@ -694,16 +694,20 @@ async function setLose(message) {
     }
 
     const bg1 = new Image();
-bg1.src = "/images/parallax/1.png";
-
 const bg2 = new Image();
-bg2.src = "/images/parallax/2.png";
-
 const bg3 = new Image();
-bg3.src = "/images/parallax/3.png";
-
 const bg4 = new Image();
-bg4.src = "/images/parallax/4.png";
+
+function loadBattleParallaxBackgrounds() {
+  const safeBattle = [1, 2, 3, 4, 5].includes(currentBattle)
+    ? currentBattle
+    : 1;
+
+  bg1.src = `/images/parallax/battle${safeBattle}/1.png`;
+  bg2.src = `/images/parallax/battle${safeBattle}/2.png`;
+  bg3.src = `/images/parallax/battle${safeBattle}/3.png`;
+  bg4.src = `/images/parallax/battle${safeBattle}/4.png`;
+}
 
     function titanCanAttackPlayer(titan) {
       const playerCenterX = player.x + player.width / 2;
@@ -1075,33 +1079,37 @@ document.addEventListener("mouseup", () => {
 
   
   
-      function drawLayer(img, speed, targetHeight, bottomAlign = true) {
-  if (!img.complete) return;
+      function drawLayer(img, speed, targetHeight, yOffset = 0, bottomAlign = true) {
+  if (!img.complete || img.naturalWidth === 0) return;
 
-  const scale = targetHeight / img.height;
-  const width = img.width * scale;
-  const x = -camera.x * speed;
-  const y = bottomAlign ? canvas.height - targetHeight : 0;
+  const scale = targetHeight / img.naturalHeight;
+  const drawWidth = img.naturalWidth * scale;
+  const drawHeight = targetHeight;
 
-  // ana
-  ctx.drawImage(img, x, y, width, targetHeight);
+  let x = (-camera.x * speed) % drawWidth;
 
-  // sağa kopya
-  ctx.drawImage(img, x + width, y, width, targetHeight);
+  if (x > 0) {
+    x -= drawWidth;
+  }
 
-  // sola kopya
-  ctx.drawImage(img, x - width, y, width, targetHeight);
+  const y = bottomAlign
+    ? canvas.height - drawHeight + yOffset
+    : yOffset;
+
+  while (x < canvas.width) {
+    ctx.drawImage(img, x, y, drawWidth, drawHeight);
+    x += drawWidth;
+  }
 }
       
 function drawParallax() {
 
-  // Layer 1 - Sky (çok yavaş)
+  // Layer 1 - Sky
   if (bg1.complete) {
     ctx.drawImage(
       bg1,
       -camera.x * 0.1,
       -50,
-  
     );
   }
 
@@ -1120,11 +1128,10 @@ function drawParallax() {
       bg3,
       -camera.x * 0.3,
       183,
-
     );
   }
 
-  // Layer 4 - Foreground (en hızlı)
+  // Layer 4 - Foreground
   if (bg4.complete) {
     ctx.drawImage(
       bg4,
@@ -1557,6 +1564,8 @@ function drawGround() {
     const spawnGasCount = Number(gameMeta.dataset.spawnGasCount || 2);
     const currentBattle = Number(gameMeta.dataset.level || 1);
     const currentSectorNumber = Number(gameMeta.dataset.sector || 1);
+
+    loadBattleParallaxBackgrounds();
 
     function updateObjectiveProgress() {
   const progressEl = document.getElementById("objectiveProgress");
