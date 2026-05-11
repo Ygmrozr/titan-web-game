@@ -289,8 +289,25 @@ levelBackground.src = "/images/levels/trost.png";
       hitFlashTimer: 0
     };
     
-    const playerImg = new Image();
-    playerImg.src = "/images/sprites/player.png";
+    const playerSprites = {
+  attack: new Image(),
+  jump: new Image(),
+  run1: new Image(),
+  run2: new Image(),
+  run3: new Image(),
+  run4: new Image(),
+  idle: new Image(),
+  dead: new Image()
+};
+
+playerSprites.attack.src = "/images/player/01_attack.png";
+playerSprites.jump.src = "/images/player/02_jump.png";
+playerSprites.run1.src = "/images/player/03_run_1.png";
+playerSprites.run2.src = "/images/player/04_run_2.png";
+playerSprites.run3.src = "/images/player/05_run_3.png";
+playerSprites.run4.src = "/images/player/06_run_4.png";
+playerSprites.idle.src = "/images/player/07_idle.png";
+playerSprites.dead.src = "/images/player/dead.png";
 
     const titanSprites = {
   idle: new Image(),
@@ -1193,11 +1210,11 @@ const parallaxSettings = {
 ],
 
   4: [
-    { img: bg1, speed: 0.10, x: 0, y: -400 },
-    { img: bg2, speed: 0.20, x: 0, y: -50 },
-    { img: bg3, speed: 0.30, x: 0, y: 183 },
-    { img: bg4, speed: 0.50, x: 0, y: 270 }
-  ],
+    { img: bg1, speed: 0.10, x: 0, y: -30 },
+  { img: bg2, speed: 0.20, x: 0, y: 75 },
+  { img: bg3, speed: 0.30, x: 0, y: 100 },
+  { img: bg4, speed: 0.50, x: 0, y: 218 }
+],
 
   5: [
     { img: bg1, speed: 0.10, x: 0, y: -50 },
@@ -1464,81 +1481,88 @@ function drawGround() {
       }
     }
 
-    function drawPlayer() {
-  const x = player.x - camera.x;
-  const y = player.y;
+    
+    function getPlayerImage() {
 
-  let frameIndex = 4; // idle
+      if (game.state === "lose" || player.health <= 0) {
+  return playerSprites.dead;
+}
+  if (player.attackTimer > 0) {
+    return playerSprites.attack;
+  }
 
   if (!player.onGround) {
-    frameIndex = 1; // jump
-  } else if (player.attackTimer > 0) {
-    frameIndex = 0; // attack
-  } else if (Math.abs(player.vx) > 0.5) {
-    frameIndex = (Math.floor(Date.now() / 150) % 2) + 2; // run frames 2-3
-  } else {
-    frameIndex = 4; // idle
+    return playerSprites.jump;
   }
 
-  if (playerImg.complete && playerImg.naturalWidth > 0) {
-    const frameCount = 5;
-    const frameWidth = playerImg.width / frameCount;
-    const frameHeight = playerImg.height;
+  if (Math.abs(player.vx) > 0.5) {
+    const runFrames = [
+      playerSprites.run1,
+      playerSprites.run2,
+      playerSprites.run3,
+      playerSprites.run4
+    ];
 
-    ctx.save();
+    const runIndex = Math.floor(Date.now() / 110) % runFrames.length;
+    return runFrames[runIndex];
+  }
 
-    if (player.facing === -1) {
-      ctx.scale(-1, 1);
-      ctx.drawImage(
-        playerImg,
-        frameIndex * frameWidth,
-        0,
-        frameWidth,
-        frameHeight,
-        -(x + player.width),
-        y,
-        player.width,
-        player.height
-      );
-    } else {
-      ctx.drawImage(
-        playerImg,
-        frameIndex * frameWidth,
-        0,
-        frameWidth,
-        frameHeight,
-        x,
-        y,
-        player.width,
-        player.height
-      );
-    }
+  return playerSprites.idle;
+}
 
-    ctx.restore();
+function drawPlayerSprite(img, drawX, drawY, drawWidth, drawHeight, facing) {
+  ctx.save();
+
+  if (facing === -1) {
+    ctx.scale(-1, 1);
+    ctx.drawImage(
+      img,
+      -drawX - drawWidth,
+      drawY,
+      drawWidth,
+      drawHeight
+    );
+  } else {
+    ctx.drawImage(
+      img,
+      drawX,
+      drawY,
+      drawWidth,
+      drawHeight
+    );
+  }
+
+  ctx.restore();
+}
+
+function drawPlayer() {
+  const img = getPlayerImage();
+
+  const hitboxX = player.x - camera.x;
+  const hitboxY = player.y;
+
+  if (img && img.complete && img.naturalWidth > 0) {
+    const drawHeight = player.height;
+    const drawWidth = drawHeight * (img.naturalWidth / img.naturalHeight);
+
+    const drawX = hitboxX + player.width / 2 - drawWidth / 2;
+    const drawY = hitboxY + player.height - drawHeight;
+
+    drawPlayerSprite(
+      img,
+      drawX,
+      drawY,
+      drawWidth,
+      drawHeight,
+      player.facing
+    );
   } else {
     ctx.fillStyle = "#2ecc71";
-    ctx.fillRect(x, y, player.width, player.height);
-  }
-
-  if (player.attackTimer > 0) {
-    const slashX = player.facing === 1 ? x + player.width + 2 : x - 28;
-    const slashY = y + 30;
-
-    ctx.strokeStyle = "rgba(255,255,255,0.9)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-
-    if (player.facing === 1) {
-      ctx.moveTo(slashX, slashY + 14);
-      ctx.lineTo(slashX + 28, slashY);
-    } else {
-      ctx.moveTo(slashX + 28, slashY + 14);
-      ctx.lineTo(slashX, slashY);
-    }
-
-    ctx.stroke();
+    ctx.fillRect(hitboxX, hitboxY, player.width, player.height);
   }
 }
+
+
     function drawHUD() {
   scoreText.textContent = "Score: " + getTotalScore();
 
