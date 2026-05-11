@@ -310,23 +310,36 @@ playerSprites.idle.src = "/images/player/07_idle.png";
 playerSprites.dead.src = "/images/player/dead.png";
 
     const titanSprites = {
-  idle: new Image(),
+  idle1: new Image(),
   walk1: new Image(),
   walk2: new Image(),
   walk3: new Image(),
+  walk4: new Image(),
+  walk5: new Image(),
   idle2: new Image(),
   attack: new Image(),
+  hurt: new Image(),
   dead: new Image()
 };
 
-titanSprites.idle.src = "/images/titans/01_idle_1.png";
+titanSprites.idle1.src = "/images/titans/01_idle_1.png";
 titanSprites.walk1.src = "/images/titans/02_walk_1.png";
 titanSprites.walk2.src = "/images/titans/03_walk_2.png";
 titanSprites.walk3.src = "/images/titans/04_walk_3.png";
-titanSprites.idle2.src = "/images/titans/04_walk_3.png";
-titanSprites.attack.src = "/images/titans/06_attack.png";
-titanSprites.dead.src = "/images/titans/07_dead.png";
+titanSprites.walk4.src = "/images/titans/05_walk_4.png";
+titanSprites.walk5.src = "/images/titans/05_walk_5.png";
+titanSprites.idle2.src = "/images/titans/06_idle_2.png";
+titanSprites.attack.src = "/images/titans/07_attack.png";
+titanSprites.hurt.src = "/images/titans/08_hurt.png";
+titanSprites.dead.src = "/images/titans/09_dead.png";
 
+const titanWalkFrames = [
+  titanSprites.walk1,
+  titanSprites.walk2,
+  titanSprites.walk3,
+  titanSprites.walk4,
+  titanSprites.walk5
+];
 
     const keys = {};
 
@@ -380,10 +393,9 @@ titanSprites.dead.src = "/images/titans/07_dead.png";
         spriteHeight: height + 22,
         alive: true,
         dir,
-        faceDir: dir,
         minX,
         maxX,
-        moveSpeed: rand(0.55, 1.0),
+        moveSpeed: rand(0.25, 0.45),
         maxHealth: hp,
         health: hp,
         hitCooldown: 0,
@@ -392,11 +404,12 @@ titanSprites.dead.src = "/images/titans/07_dead.png";
         attackFlashTimer: 0,
         damage: randInt(10, 18),
         bloodTimer: 0,
-        frame: 0,
-        frameTimer: 0,
         state: "walk",
-        deadTimer: 0,
-        drawDead: false
+    frame: 0,
+    frameTimer: 0,
+    deadTimer: 0,
+    drawDead: false,
+    faceDir: dir
       };
     }
 
@@ -1032,31 +1045,34 @@ document.addEventListener("mouseup", () => {
     return;
   }
 
-  if (titan.attackFlashTimer > 0 || titan.attackCooldown > 28) {
-    titan.state = "attack";
+  if (titan.hitCooldown > 0 || titan.stunTimer > 0) {
+    titan.state = "hurt";
     return;
   }
 
-  if (titan.hitCooldown > 0 || titan.stunTimer > 0) {
-    titan.state = "idle2";
+  if (titan.attackFlashTimer > 0 || titan.attackCooldown > 28) {
+    titan.state = "attack";
     return;
   }
 
   titan.state = "walk";
   titan.frameTimer++;
 
-  if (titan.frameTimer >= 12) {
+  if (titan.frameTimer >= 35) {
     titan.frameTimer = 0;
-    titan.frame = (titan.frame + 1) % 3;
+    titan.frame = (titan.frame + 1) % titanWalkFrames.length;
   }
 }
     function updateTitans() {
       if (game.state !== "playing") return;
 
       titans.forEach(titan => {
-        if (!titan.alive) {
+       if (!titan.alive) {
   if (titan.deadTimer > 0) {
     titan.deadTimer--;
+    titan.drawDead = true;
+  } else {
+    titan.drawDead = false;
   }
   return;
 }
@@ -1306,35 +1322,61 @@ function drawGround() {
     }
 
     function getTitanImage(titan) {
-      if (!titan.alive || titan.state === "dead") {
-        return titanSprites.dead;
-      }
+  if (!titan.alive || titan.state === "dead") {
+    return titanSprites.dead;
+  }
 
-      if (titan.state === "attack") {
-        return titanSprites.attack;
-      }
+  if (titan.hitCooldown > 0 || titan.stunTimer > 0 || titan.state === "hurt") {
+    return titanSprites.hurt;
+  }
 
-      if (titan.state === "idle2") {
-        return titanSprites.idle2;
-      }
+  if (titan.attackFlashTimer > 0 || titan.attackCooldown > 28 || titan.state === "attack") {
+    return titanSprites.attack;
+  }
 
-      if (titan.state === "walk") {
-        const frames = [
-          titanSprites.walk1,
-          titanSprites.walk2,
-          titanSprites.walk3
-        ];
+  if (titan.state === "walk") {
+    return titanWalkFrames[titan.frame % titanWalkFrames.length];
+  }
 
-        return frames[titan.frame % frames.length];
-      }
+  if (titan.state === "idle2") {
+    return titanSprites.idle2;
+  }
 
-      return titanSprites.idle;
-    }
+  return titanSprites.idle1;
+}
 
-    function drawTitanSprite(img, drawX, drawY, drawWidth, drawHeight, faceDir) {
+
+
+    function drawTitans() {
+  titans.forEach(titan => {
+    const shouldDrawDead = !titan.alive && titan.deadTimer > 0;
+
+    if (!titan.alive && !shouldDrawDead && !titan.drawDead) return;
+
+    const img = getTitanImage(titan);
+
+    const hitboxX = titan.x - camera.x;
+    const hitboxY = titan.y;
+
+    let drawHeight = titan.height;
+let drawWidth = titan.width;
+
+if (img && img.complete && img.naturalWidth > 0) {
+  if (!titan.alive || titan.state === "dead") {
+    // Ölü titan yatay olduğu için genişlikten ölçekliyoruz.
+    // 0.80 değeri büyük gelirse 0.70 yapabilirsin.
+    drawWidth = titan.height * 0.95;
+    drawHeight = drawWidth * (img.naturalHeight / img.naturalWidth);
+  } else {
+    drawHeight = titan.height;
+    drawWidth = drawHeight * (img.naturalWidth / img.naturalHeight);
+  }
+
+  const drawX = hitboxX + titan.width / 2 - drawWidth / 2;
+  const drawY = hitboxY + titan.height - drawHeight + 6;
       ctx.save();
 
-      if (faceDir === -1) {
+      if (titan.faceDir === -1) {
         ctx.scale(-1, 1);
         ctx.drawImage(
           img,
@@ -1354,74 +1396,60 @@ function drawGround() {
       }
 
       ctx.restore();
+    } else {
+      ctx.fillStyle = titan.hitCooldown > 0 ? "#e9897f" : "#c96a5d";
+      ctx.fillRect(hitboxX, hitboxY, titan.width, titan.height);
     }
 
-    function drawTitans() {
-      titans.forEach(titan => {
-        const shouldDrawDead = !titan.alive && titan.deadTimer > 0;
-
-        if (!titan.alive && !shouldDrawDead) return;
-
-        const x = titan.x - camera.x;
-        const y = titan.y;
-
-        const drawWidth = titan.spriteWidth || titan.width;
-        const drawHeight = titan.spriteHeight || titan.height;
-        const drawX = x + titan.width / 2 - drawWidth / 2;
-        const drawY = ground.y - drawHeight;
-
-        const img = getTitanImage(titan);
-
-        if (img && img.complete && img.naturalWidth > 0) {
-          drawTitanSprite(img, drawX, drawY, drawWidth, drawHeight, titan.faceDir);
-        } else {
-          ctx.fillStyle = titan.isBoss ? (titan.hitCooldown > 0 ? "#b13b3b" : "#7f1d1d") : (titan.hitCooldown > 0 ? "#e9897f" : "#c96a5d");
-          ctx.fillRect(x, y, titan.width, titan.height);
-
-          ctx.fillStyle = "#fff";
-          ctx.fillRect(x + 8, y + 22, 7, 7);
-          ctx.fillRect(x + titan.width - 15, y + 22, 7, 7);
-        }
-
-        if (titan.alive && titan.bloodTimer > 0) {
-          ctx.fillStyle = "rgba(180,0,0,0.75)";
-          ctx.beginPath();
-          ctx.arc(x + titan.width / 2, y + titan.height * 0.23, 7, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        if (titan.alive && titan.stunTimer > 0) {
-          ctx.fillStyle = "#ffd54f";
-          ctx.beginPath();
-          ctx.arc(x + titan.width / 2, y - 20, 4, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(x + titan.width / 2 - 10, y - 13, 4, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(x + titan.width / 2 + 10, y - 13, 4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        if (titan.alive) {
-          const barWidth = Math.max(42, titan.width);
-          const healthRatio = Math.max(0, titan.health / titan.maxHealth);
-          const barX = x + titan.width / 2 - barWidth / 2;
-
-          ctx.fillStyle = "rgba(0,0,0,0.45)";
-          ctx.fillRect(barX, y - 12, barWidth, 6);
-
-          ctx.fillStyle = "#2ecc71";
-          ctx.fillRect(barX, y - 12, barWidth * healthRatio, 6);
-
-          if (titan.isBoss) {
-            ctx.fillStyle = "#f1c40f";
-            ctx.font = "bold 12px Arial";
-            ctx.fillText("BOSS", barX, y - 20);
-          }
-        }
-      });
+    if (titan.alive && titan.bloodTimer > 0) {
+      ctx.fillStyle = "rgba(180,0,0,0.75)";
+      ctx.beginPath();
+      ctx.arc(
+        hitboxX + titan.width / 2,
+        hitboxY + titan.height * 0.23,
+        7,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
     }
+
+    if (titan.alive && titan.stunTimer > 0) {
+      ctx.fillStyle = "#ffd54f";
+
+      ctx.beginPath();
+      ctx.arc(hitboxX + titan.width / 2, hitboxY - 20, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(hitboxX + titan.width / 2 - 10, hitboxY - 13, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(hitboxX + titan.width / 2 + 10, hitboxY - 13, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (titan.alive) {
+      const barWidth = Math.max(42, titan.width);
+      const healthRatio = Math.max(0, titan.health / titan.maxHealth);
+      const barX = hitboxX + titan.width / 2 - barWidth / 2;
+      const barY = hitboxY - 12;
+
+      ctx.fillStyle = "rgba(0,0,0,0.45)";
+      ctx.fillRect(barX, barY, barWidth, 6);
+
+      ctx.fillStyle = "#2ecc71";
+      ctx.fillRect(barX, barY, barWidth * healthRatio, 6);
+
+      if (titan.isBoss) {
+        ctx.fillStyle = "#f1c40f";
+        ctx.font = "bold 12px Arial";
+        ctx.fillText("BOSS", barX, barY - 8);
+      }
+    }
+  });
+}
 
     function drawFinish() {
   if (objectiveType !== "reach") return;
